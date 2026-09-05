@@ -149,13 +149,153 @@ textarea{resize:vertical}
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .animate{animation:fadeIn .3s ease}
+/* ══════════════════════════════════════════
+   모바일 반응형 (단일 HTML, CSS 미디어쿼리)
+   ══════════════════════════════════════════ */
+
+/* ── 태블릿 (641~900px) ── */
+@media(max-width:900px){
+  main{max-width:100%!important;padding:24px 16px 60px}
+  .result-paper{padding:36px 28px}
+  .modal-box{max-width:96vw}
+}
+
+/* ── 모바일 공통 (≤640px) ── */
 @media(max-width:640px){
+  /* 기본 레이아웃 */
+  body{font-size:14px}
+  main{padding:16px 12px 80px}
+  .card{padding:18px 14px;border-radius:12px}
   .grid2{grid-template-columns:1fr}
-  .result-paper{padding:24px 16px}
-  main{padding:20px 12px 60px}
-  .card{padding:20px 16px}
-  .site-sub,.header-right .site-sub{display:none}
-  .provider-tabs .ptab{padding:5px 9px;font-size:11px}
+
+  /* 헤더 */
+  header{padding:0 10px;height:52px;flex-wrap:nowrap;gap:6px}
+  .site-name{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px;flex-shrink:1}
+  .site-sub{display:none}
+  .logo{width:26px;height:26px;font-size:14px;flex-shrink:0}
+  .header-right{gap:5px;flex-shrink:0;margin-left:auto}
+  /* 공급자 탭: 가로 스크롤 */
+  .provider-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:calc(100vw - 160px);scrollbar-width:none}
+  .provider-tabs::-webkit-scrollbar{display:none}
+  .ptab{padding:4px 8px;font-size:10px;white-space:nowrap}
+  /* 모델 배지 */
+  .model-badge{padding:4px 10px;font-size:11px}
+  .mdot{width:6px;height:6px}
+
+  /* 스텝바 */
+  .stepbar{margin-bottom:20px}
+  .step-label{font-size:9px;max-width:52px;text-align:center;word-break:keep-all}
+  .step-circle{width:26px;height:26px;font-size:11px}
+
+  /* 카드 제목 */
+  .card-title{font-size:14px}
+  .card-desc{font-size:12px;padding-left:28px}
+  .card-title .num{width:20px;height:20px;font-size:10px}
+
+  /* 버튼 */
+  .btn{padding:11px 16px;font-size:13px}
+  .btn-sm{padding:9px 13px;font-size:12px}
+  .btn-row{flex-wrap:wrap;gap:8px}
+
+  /* 폼 */
+  input[type=text],input[type=password],textarea,select{font-size:14px;padding:10px 11px}
+  textarea{font-size:13px}
+  .field{margin-bottom:14px}
+  .field-label{font-size:11px}
+
+  /* 프리셋 드롭다운 */
+  .preset-dropdown-wrap{flex-direction:column;gap:6px}
+  .preset-dropdown-wrap select{font-size:13px}
+  .preset-reset-btn{align-self:flex-start}
+
+  /* 드롭존 */
+  .dropzone{padding:16px 12px}
+  .dropzone-icon{font-size:22px}
+  .dropzone-label{font-size:12px}
+  .dropzone-hint{font-size:10px}
+  .upload-note{font-size:10px}
+
+  /* 파일 목록 */
+  .file-item{padding:7px 10px;font-size:12px}
+  .fbadge{font-size:10px;padding:1px 7px}
+
+  /* 결과 화면 툴바 */
+  .result-toolbar{flex-direction:column;gap:10px}
+  .result-toolbar > div:first-child h3{font-size:15px}
+  .result-toolbar > div:last-child{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px;
+    width:100%
+  }
+  .result-toolbar > div:last-child .btn-sm{
+    width:100%;
+    justify-content:center
+  }
+  .result-paper{padding:20px 14px;min-height:auto;font-size:13.5px;line-height:1.85}
+
+  /* 분석·소통 화면 */
+  .chat-messages{height:240px}
+  .chat-input-row{flex-direction:column;gap:6px;padding:8px 10px}
+  .chat-input-row textarea{height:60px;font-size:13px}
+  .chat-send-btn{padding:10px;font-size:13px;font-weight:700;border-radius:8px}
+  .confirm-row{flex-direction:column;align-items:stretch;gap:8px}
+  .confirm-row p{font-size:12px}
+  .evidence-card{padding:12px 14px}
+  .section-title{font-size:13px}
+
+  /* 알림 */
+  .alert{font-size:12px;padding:11px 14px}
+
+  /* 모달 — 바텀시트 스타일 */
+  .modal-overlay{padding:0;align-items:flex-end}
+  .modal-box{
+    border-radius:20px 20px 0 0;
+    max-height:88vh;
+    padding:24px 18px;
+    width:100%;
+    max-width:100%
+  }
+  .modal-title{font-size:16px}
+  .modal-desc{font-size:12px}
+  .provider-card{padding:14px}
+  .provider-name{font-size:13px}
+  .provider-note{font-size:11px}
+  .tier-badge{font-size:9px;padding:1px 5px}
+  .model-select-row{flex-wrap:wrap;gap:6px}
+  .model-select-row select{width:100%;max-width:100%!important;font-size:13px}
+  .model-input-wrap{width:100%}
+  .modal-footer{flex-direction:column-reverse;gap:6px}
+  .modal-footer .btn{width:100%;justify-content:center}
+  /* 모달 드래그 핸들 표시 */
+  .modal-box::before{
+    content:'';display:block;width:40px;height:4px;
+    background:var(--border2);border-radius:2px;
+    margin:-8px auto 16px
+  }
+
+  /* 로딩 */
+  .loading-box{height:200px}
+  .spinner{width:28px;height:28px}
+
+  /* 토스트 */
+  .toast{bottom:16px;right:12px;left:12px;text-align:center;font-size:13px}
+
+  /* 칩 그룹 */
+  .chips{gap:5px}
+  .chip{padding:5px 10px;font-size:11px}
+}
+
+/* ── 초소형 모바일 (≤390px, iPhone SE 등) ── */
+@media(max-width:390px){
+  header{height:48px}
+  .provider-tabs{max-width:calc(100vw - 140px)}
+  .ptab{padding:3px 6px;font-size:9px}
+  .model-badge{padding:3px 8px;font-size:10px}
+  .step-label{display:none}
+  .card{padding:14px 12px}
+  .btn{font-size:12px;padding:10px 12px}
+  .result-toolbar > div:last-child{grid-template-columns:1fr}
 }
 
 .model-input-wrap{position:relative;flex:1}
@@ -1570,6 +1710,32 @@ function showToast(msg){
   clearTimeout(tt);tt=setTimeout(()=>t.classList.add('hidden'),2800);
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeApiModal();});
+
+// ── 모바일 UX 개선 ────────────────────────────────────
+// 모달 바깥 터치 시 닫기
+document.getElementById('apiModal').addEventListener('click', function(e){
+  if(e.target === this) closeApiModal();
+});
+
+// iOS: input focus 시 화면 확대 방지 (font-size 16px 미만이면 확대됨)
+// 입력 포커스 시 일시적으로 font-size 보정
+(function fixIosZoom(){
+  if(!/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
+  const style = document.createElement('style');
+  style.textContent = 'input,textarea,select{font-size:16px!important}';
+  document.head.appendChild(style);
+})();
+
+// 스텝 이동 시 상단 스크롤 (모바일에서 카드가 뷰포트 아래에 있을 경우 대비)
+const _origGoStep = goStep;
+// goStep은 이미 window.scrollTo 호출 중 — 추가 보완 없음
+
+// 모바일에서 채팅 입력 후 키보드가 내려가지 않도록 send 후 blur 해제
+const _origSendChat = sendChat;
+window.sendChat = async function(){
+  await _origSendChat();
+  // 모바일: 전송 후 input blur (키보드 유지가 기본 - 사용자 편의에 따라)
+};
 </script>
 </body>
 </html>
