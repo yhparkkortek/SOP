@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>자소서 AI 작성기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F0F4FA;--surface:#FFF;--surface2:#F7F9FD;
+  --border:#D8DFF0;--border2:#BFC9E3;
+  --accent:#3B5BDB;--accent-l:#EEF2FF;--accent-d:#2F4AC0;
+  --text:#18243A;--sub:#5A6A8A;--muted:#8A98B8;
+  --ok:#197A4F;--ok-l:#D3F5E8;
+  --err:#B91C1C;--err-l:#FEE2E2;
+  --warn:#92400E;--warn-l:#FEF3C7;
+  --radius:10px;--shadow:0 2px 16px rgba(30,50,120,.08);
+}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;line-height:1.6}
+/* 헤더 */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:200;box-shadow:0 1px 8px rgba(30,50,120,.06)}
+.logo{width:30px;height:30px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;flex-shrink:0}
+.site-name{font-weight:700;font-size:16px}
+.site-sub{font-size:12px;color:var(--muted)}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+/* AI 공급자 선택 탭 */
+.provider-tabs{display:flex;gap:0;border:1px solid var(--border2);border-radius:8px;overflow:hidden;background:var(--surface2)}
+.ptab{padding:5px 14px;font-size:12px;font-weight:700;font-family:'Noto Sans KR',sans-serif;border:none;background:transparent;color:var(--sub);cursor:pointer;transition:all .15s;border-right:1px solid var(--border2)}
+.ptab:last-child{border-right:none}
+.ptab.active{background:var(--surface);color:var(--text)}
+.ptab.ok{color:var(--ok)}
+.ptab.active.ok{background:var(--ok-l)}
+/* 모델 dot */
+.model-badge{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:5px 13px;border:1px solid var(--border2);border-radius:20px;color:var(--sub);cursor:pointer;background:var(--surface2);transition:border-color .15s;white-space:nowrap}
+.model-badge:hover{border-color:var(--accent)}
+.mdot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.mdot.ok{background:var(--ok)}
+/* 카드 */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;margin-bottom:20px;box-shadow:var(--shadow)}
+.card-title{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.card-title .num{width:24px;height:24px;background:var(--accent);color:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.card-desc{font-size:13px;color:var(--sub);margin-bottom:20px;padding-left:32px}
+/* 폼 */
+label.field-label{display:block;font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px;letter-spacing:.3px}
+input[type=text],input[type=password],textarea,select{width:100%;padding:10px 13px;font-size:14px;font-family:'Noto Sans KR',sans-serif;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);outline:none;transition:border-color .15s;line-height:1.6}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+textarea{resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{margin-bottom:16px}
+/* 프리셋 칩 */
+.preset-group-label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.4px;margin:16px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:4px}
+.chip{padding:6px 13px;font-size:12px;font-weight:600;font-family:'Noto Sans KR',sans-serif;border:1.5px solid var(--border2);border-radius:20px;background:var(--surface);color:var(--text);cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip.active{border-color:var(--accent);background:var(--accent-l);color:var(--accent)}
+/* 드롭존 */
+.dropzone{border:2px dashed var(--border2);border-radius:12px;padding:22px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)}
+.dropzone:hover,.dropzone.drag{border-color:var(--accent);background:var(--accent-l)}
+.dropzone.has-file{border-color:var(--ok);background:var(--ok-l)}
+.dropzone-icon{font-size:28px;margin-bottom:6px}
+.dropzone-label{font-size:13px;font-weight:600;color:var(--sub)}
+.dropzone-hint{font-size:11px;color:var(--muted);margin-top:3px}
+.dropzone.has-file .dropzone-label{color:var(--ok)}
+/* 버튼 */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 26px;font-size:15px;font-weight:700;font-family:'Noto Sans KR',sans-serif;border:none;border-radius:var(--radius);cursor:pointer;transition:all .18s}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--accent-d)}
+.btn-secondary{background:var(--surface);color:var(--accent);border:1.5px solid var(--accent)}
+.btn-secondary:hover:not(:disabled){background:var(--accent-l)}
+.btn-ghost{background:transparent;color:var(--sub);border:1.5px solid var(--border2)}
+.btn-ghost:hover:not(:disabled){background:var(--surface2)}
+.btn-sm{padding:7px 16px;font-size:13px}
+.btn-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}
+/* 스텝바 */
+.stepbar{display:flex;margin-bottom:32px}
+.step-item{flex:1;display:flex;flex-direction:column;align-items:center}
+.step-line-wrap{display:flex;align-items:center;width:100%}
+.step-line{flex:1;height:2px;background:var(--border);transition:background .3s}
+.step-line.done{background:var(--accent)}
+.step-circle{width:30px;height:30px;border-radius:50%;border:2px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0;transition:all .3s}
+.step-circle.done{background:var(--accent);border-color:var(--accent);color:#fff}
+.step-circle.active{background:var(--accent-l);border-color:var(--accent);color:var(--accent)}
+.step-label{margin-top:5px;font-size:11px;font-weight:500;color:var(--muted)}
+.step-label.active{color:var(--accent);font-weight:700}
+/* 알림 */
+.alert{padding:13px 16px;border-radius:var(--radius);font-size:13px;margin-bottom:16px;line-height:1.6}
+.alert-info{background:var(--accent-l);border:1px solid var(--accent);color:var(--accent-d)}
+.alert-ok{background:var(--ok-l);border:1px solid #6EE7B7;color:var(--ok)}
+.alert-err{background:var(--err-l);border:1px solid #FCA5A5;color:var(--err)}
+.alert-warn{background:var(--warn-l);border:1px solid #FCD34D;color:var(--warn)}
+/* 결과 */
+.result-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.result-paper{background:#fff;border:1px solid var(--border);border-radius:12px;padding:48px 52px;line-height:1.9;font-size:14.5px;white-space:pre-wrap;word-break:keep-all;min-height:840px;box-shadow:0 2px 24px rgba(30,50,120,.07);color:var(--text)}
+.spinner{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .85s linear infinite}
+.loading-box{display:flex;flex-direction:column;align-items:center;justify-content:center;height:320px;gap:16px;color:var(--sub);font-size:14px}
+/* 모달 */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,20,60,.45);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px}
+.modal-box{background:#fff;border-radius:16px;padding:32px;max-width:560px;width:100%;box-shadow:0 8px 40px rgba(10,20,60,.18);max-height:90vh;overflow-y:auto}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:6px}
+.modal-desc{font-size:13px;color:var(--sub);margin-bottom:20px;line-height:1.65}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+/* API 공급자 카드 */
+.provider-card{border:1.5px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px;transition:border-color .2s}
+.provider-card.configured{border-color:var(--ok)}
+.provider-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.provider-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.provider-name{font-size:15px;font-weight:700}
+.provider-note{font-size:12px;color:var(--sub);margin-top:2px}
+.provider-status{margin-left:auto;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.st-ok{background:var(--ok-l);color:var(--ok)}
+.st-no{background:var(--surface2);color:var(--muted)}
+.model-select-row{display:flex;gap:8px;align-items:center;margin-top:10px}
+.model-select-row select{flex:1}
+/* 토스트 */
+.toast{position:fixed;bottom:24px;right:24px;background:#1A2030;color:#fff;padding:11px 20px;border-radius:10px;font-size:14px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.18);z-index:600;animation:slideUp .25s ease}
+/* 유틸 */
+.hidden{display:none!important}
+.divider{height:1px;background:var(--border);margin:20px 0}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.animate{animation:fadeIn .3s ease}
+@media(max-width:640px){
+  .grid2{grid-template-columns:1fr}
+  .result-paper{padding:24px 16px}
+  main{padding:20px 12px 60px}
+  .card{padding:20px 16px}
+  .site-sub,.header-right .site-sub{display:none}
+  .provider-tabs .ptab{padding:5px 9px;font-size:11px}
+}
+
+.model-input-wrap{position:relative;flex:1}
+.model-input-wrap input{width:100%;padding-right:32px}
+.model-input-wrap .clear-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);padding:2px}
+.model-input-wrap .clear-btn:hover{color:var(--text)}
+.model-hint{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5}
+
+/* ── 분석·소통 단계 ── */
+.analysis-section{margin-bottom:24px}
+.analysis-section .section-title{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.analysis-section .section-title .badge{background:var(--accent-l);color:var(--accent);font-size:11px;padding:2px 8px;border-radius:20px;font-weight:700}
+.evidence-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:10px}
+.evidence-card .ev-num{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.evidence-card .ev-content{font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px;line-height:1.55}
+.evidence-card .ev-basis{font-size:13px;color:var(--sub);line-height:1.6;border-top:1px solid var(--border);padding-top:8px;margin-top:4px}
+.evidence-card .ev-basis b{color:var(--accent-d)}
+/* 대화창 */
+.chat-box{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface)}
+.chat-messages{height:360px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.chat-messages::-webkit-scrollbar{width:4px}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.msg{display:flex;flex-direction:column;gap:3px;max-width:88%}
+.msg.ai{align-self:flex-start}
+.msg.user{align-self:flex-end}
+.msg-bubble{padding:11px 15px;border-radius:12px;font-size:13px;line-height:1.65;white-space:pre-wrap;word-break:keep-all}
+.msg.ai .msg-bubble{background:var(--accent-l);color:var(--text);border-bottom-left-radius:3px}
+.msg.user .msg-bubble{background:var(--accent);color:#fff;border-bottom-right-radius:3px}
+.msg-label{font-size:10px;color:var(--muted);padding:0 4px}
+.msg.user .msg-label{text-align:right}
+.chat-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);background:var(--surface2)}
+.chat-input-row textarea{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:'Noto Sans KR',sans-serif;resize:none;height:64px;line-height:1.5;background:var(--surface);color:var(--text);outline:none;transition:border-color .15s}
+.chat-input-row textarea:focus{border-color:var(--accent)}
+.chat-send-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:0 16px;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:background .15s;flex-shrink:0}
+.chat-send-btn:hover{background:var(--accent-d)}
+.chat-send-btn:disabled{opacity:.4;cursor:not-allowed}
+.chat-typing{display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:12px;color:var(--muted)}
+.chat-typing .dot{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite}
+.chat-typing .dot:nth-child(2){animation-delay:.2s}
+.chat-typing .dot:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.confirm-row{display:flex;align-items:center;gap:10px;margin-top:14px;padding:14px 16px;background:var(--ok-l);border:1px solid #6EE7B7;border-radius:10px}
+.confirm-row p{font-size:13px;color:var(--ok);font-weight:500;flex:1}
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<header>
+  <div class="logo">✍</div>
+  <span class="site-name">자소서 AI 작성기</span>
+  <span class="site-sub">대입 자기소개서 자동 작성 도우미</span>
+  <div class="header-right">
+    <!-- AI 공급자 탭 -->
+    <div class="provider-tabs" id="providerTabs"></div>
+    <!-- 현재 모델 배지 -->
+    <button class="model-badge" onclick="openApiModal()">
+      <span class="mdot" id="mdot"></span>
+      <span id="modelBadgeText">AI 설정</span>
+    </button>
+  </div>
+</header>
+
+<!-- API 설정 모달 -->
+<div class="modal-overlay hidden" id="apiModal">
+  <div class="modal-box">
+    <div class="modal-title">⚙️ AI 공급자 & API 키 설정</div>
+    <div class="modal-desc">사용할 AI를 선택하고 각 서비스의 API 키를 입력하세요.<br>키는 브라우저 로컬에만 저장되며 외부로 전송되지 않습니다.</div>
+
+    <!-- Claude -->
+    <div class="provider-card" id="pc_claude">
+      <div class="provider-header">
+        <div class="provider-icon" style="background:#F0EFF8">🤖</div>
+        <div>
+          <div class="provider-name">Claude (Anthropic)</div>
+          <div class="provider-note">가장 정교한 한국어 자소서 작성</div>
+        </div>
+        <span class="provider-status st-no" id="ps_claude">미설정</span>
+      </div>
+      <label class="field-label">API 키 &nbsp;<a href="https://console.anthropic.com/account/keys" target="_blank" style="color:var(--accent);font-size:11px">발급 →</a></label>
+      <input type="password" id="key_claude" placeholder="sk-ant-api03-..." oninput="onKeyInput('claude')"/>
+      <div class="model-select-row">
+        <label class="field-label" style="margin:0;white-space:nowrap">모델</label>
+        <select id="model_claude_preset" onchange="applyPreset('claude')" style="flex:0 0 auto;width:auto;max-width:200px">
+          <option value="claude-sonnet-4-6">Sonnet 4.6 (추천)</option>
+          <option value="claude-opus-5">Opus 5</option>
+          <option value="claude-sonnet-5">Sonnet 5</option>
+          <option value="claude-haiku-4-5-20251001">Haiku 4.5</option>
+          <option value="__custom__">직접 입력...</option>
+        </select>
+        <div class="model-input-wrap">
+          <input type="text" id="model_claude" placeholder="모델명 직접 입력" oninput="onModelInput('claude')"/>
+          <button class="clear-btn" onclick="clearModel('claude')">✕</button>
+        </div>
+      </div>
+      <p class="model-hint">최신 모델명: <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" style="color:var(--accent)">Anthropic 문서 →</a></p>
+    </div>
+
+    <!-- Gemini -->
+    <div class="provider-card" id="pc_gemini">
+      <div class="provider-header">
+        <div class="provider-icon" style="background:#E8F5E9">✨</div>
+        <div>
+          <div class="provider-name">Gemini (Google)</div>
+          <div class="provider-note">Google AI Studio 무료 API 지원</div>
+        </div>
+        <span class="provider-status st-no" id="ps_gemini">미설정</span>
+      </div>
+      <label class="field-label">API 키 &nbsp;<a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent);font-size:11px">발급 →</a></label>
+      <input type="password" id="key_gemini" placeholder="AIza..." oninput="onKeyInput('gemini')"/>
+      <div class="model-select-row">
+        <label class="field-label" style="margin:0;white-space:nowrap">모델</label>
+        <!-- HTML 모달 내 Gemini 드롭다운 부분 -->
+        <select id="model_gemini_preset" onchange="applyPreset('gemini')" style="flex:0 0 auto;width:auto;max-width:200px">
+          <option value="gemini-2.5-flash">2.5 Flash (추천·무료)</option>
+          <option value="gemini-2.5-pro">2.5 Pro</option>
+          <option value="gemini-1.5-flash">1.5 Flash</option>
+          <option value="__custom__">직접 입력...</option>
+        </select>
+        <div class="model-input-wrap">
+          <input type="text" id="model_gemini" placeholder="모델명 직접 입력" oninput="onModelInput('gemini')"/>
+          <button class="clear-btn" onclick="clearModel('gemini')">✕</button>
+        </div>
+      </div>
+      <p class="model-hint">최신 모델명: <a href="https://ai.google.dev/gemini-api/docs/models" target="_blank" style="color:var(--accent)">Google AI 문서 →</a></p>
+    </div>
+
+    <!-- Grok -->
+    <div class="provider-card" id="pc_grok">
+      <div class="provider-header">
+        <div class="provider-icon" style="background:#E8F4FD">⚡</div>
+        <div>
+          <div class="provider-name">Grok (xAI)</div>
+          <div class="provider-note">xAI API — OpenAI 호환 엔드포인트</div>
+        </div>
+        <span class="provider-status st-no" id="ps_grok">미설정</span>
+      </div>
+      <label class="field-label">API 키 &nbsp;<a href="https://console.x.ai/" target="_blank" style="color:var(--accent);font-size:11px">발급 →</a></label>
+      <input type="password" id="key_grok" placeholder="xai-..." oninput="onKeyInput('grok')"/>
+      <div class="model-select-row">
+        <label class="field-label" style="margin:0;white-space:nowrap">모델</label>
+        <select id="model_grok_preset" onchange="applyPreset('grok')" style="flex:0 0 auto;width:auto;max-width:200px">
+          <option value="grok-4">Grok 4 (추천)</option>
+          <option value="grok-3">Grok 3</option>
+          <option value="grok-3-mini">Grok 3 Mini</option>
+          <option value="__custom__">직접 입력...</option>
+        </select>
+        <div class="model-input-wrap">
+          <input type="text" id="model_grok" placeholder="모델명 직접 입력" oninput="onModelInput('grok')"/>
+          <button class="clear-btn" onclick="clearModel('grok')">✕</button>
+        </div>
+      </div>
+      <p class="model-hint">최신 모델명: <a href="https://docs.x.ai/docs/models" target="_blank" style="color:var(--accent)">xAI 문서 →</a></p>
+    </div>
+
+    <!-- ChatGPT -->
+    <div class="provider-card" id="pc_openai">
+      <div class="provider-header">
+        <div class="provider-icon" style="background:#E8F5E9">💬</div>
+        <div>
+          <div class="provider-name">ChatGPT (OpenAI)</div>
+          <div class="provider-note">GPT-4o · OpenAI 공식 API</div>
+        </div>
+        <span class="provider-status st-no" id="ps_openai">미설정</span>
+      </div>
+      <label class="field-label">API 키 &nbsp;<a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--accent);font-size:11px">발급 →</a></label>
+      <input type="password" id="key_openai" placeholder="sk-proj-..." oninput="onKeyInput('openai')"/>
+      <div class="model-select-row">
+        <label class="field-label" style="margin:0;white-space:nowrap">모델</label>
+        <select id="model_openai_preset" onchange="applyPreset('openai')" style="flex:0 0 auto;width:auto;max-width:200px">
+          <option value="gpt-4o">GPT-4o (추천)</option>
+          <option value="o3">o3</option>
+          <option value="o4-mini">o4-mini</option>
+          <option value="gpt-4o-mini">GPT-4o Mini</option>
+          <option value="__custom__">직접 입력...</option>
+        </select>
+        <div class="model-input-wrap">
+          <input type="text" id="model_openai" placeholder="모델명 직접 입력" oninput="onModelInput('openai')"/>
+          <button class="clear-btn" onclick="clearModel('openai')">✕</button>
+        </div>
+      </div>
+      <p class="model-hint">최신 모델명: <a href="https://platform.openai.com/docs/models" target="_blank" style="color:var(--accent)">OpenAI 문서 →</a></p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeApiModal()">닫기</button>
+      <button class="btn btn-primary btn-sm" onclick="saveAllKeys()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 토스트 -->
+<div class="toast hidden" id="toast"></div>
+
+<!-- 메인 -->
+<main style="max-width:960px;margin:0 auto;padding:36px 20px 80px">
+
+<!-- 스텝바 -->
+<div class="stepbar" id="stepbar"></div>
+
+<!-- STEP 0 -->
+<div id="step0" class="animate">
+  <div class="card">
+    <div class="card-title"><span class="num">1</span>지원 대학 · 학과 · 인재상</div>
+    <div class="card-desc">프리셋을 선택하거나 직접 입력하세요. 선택 시 문항·인재상이 자동으로 입력됩니다.</div>
+    <div class="preset-group-label">── 지원 대학 프리셋 (이미지 기준) ──</div>
+    <div class="chips" id="chips1"></div>
+    <div class="preset-group-label">── 수도권 주요 4년제 ──</div>
+    <div class="chips" id="chips2"></div>
+    <div class="divider"></div>
+    <div class="grid2">
+      <div class="field">
+        <label class="field-label">지원 대학 <span style="color:var(--err)">*</span></label>
+        <input type="text" id="univInput" placeholder="예: UNIST"/>
+      </div>
+      <div class="field">
+        <label class="field-label">지원 학과</label>
+        <input type="text" id="deptInput" placeholder="예: 바이오메디컬공학과"/>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">자소서 문항 <span style="color:var(--err)">*</span></label>
+      <textarea id="questionInput" rows="4" placeholder="자소서 문항을 입력하세요 (복수 문항 가능)"></textarea>
+    </div>
+    <div class="field">
+      <label class="field-label">인재상 내용 <span style="color:var(--err)">*</span></label>
+      <textarea id="talentInput" rows="7" placeholder="인재상을 입력하거나 위 프리셋을 선택하세요"></textarea>
+    </div>
+    <div id="err0" class="alert alert-err hidden"></div>
+    <div class="btn-row">
+      <div></div>
+      <button class="btn btn-primary" onclick="goStep(1)">다음 → 학생부 업로드</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 1 -->
+<div id="step1" class="hidden animate">
+  <div class="card">
+    <div class="card-title"><span class="num">2</span>학생부 입력</div>
+    <div class="card-desc">TXT 파일을 업로드하거나 내용을 직접 붙여넣으세요.</div>
+    <div class="field">
+      <label class="field-label">학생부 TXT 파일 업로드</label>
+      <div class="dropzone" id="drop1" onclick="document.getElementById('file1').click()" ondragover="onDrag(event,'drop1')" ondragleave="offDrag('drop1')" ondrop="onDrop(event,'drop1','sTxt')">
+        <input type="file" id="file1" accept=".txt,.text" class="hidden" onchange="onFile(this,'drop1','sTxt')"/>
+        <div class="dropzone-icon">📂</div>
+        <div class="dropzone-label" id="drop1label">학생부 TXT 파일 클릭 또는 드래그</div>
+        <div class="dropzone-hint">TXT 형식 지원 | 앞서 생성한 박범준_학생부_전체.txt 사용 가능</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">또는 직접 붙여넣기</label>
+      <textarea id="sTxtArea" rows="11" placeholder="학생부 전체 내용을 여기에 붙여넣으세요.&#10;세부능력 및 특기사항, 창의적 체험활동, 행동특성 등 모든 내용을 포함하면 좋습니다."></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost btn-sm" onclick="goStep(0)">← 이전</button>
+      <button class="btn btn-primary" onclick="goStep(2)">다음 → 전문가 조언</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 2 -->
+<div id="step2" class="hidden animate">
+  <div class="card">
+    <div class="card-title"><span class="num">3</span>전문가 컨설팅 조언 <span style="font-size:12px;color:var(--muted);font-weight:400;margin-left:6px">(선택)</span></div>
+    <div class="card-desc">컨설팅 내용이 있으면 업로드 또는 붙여넣으세요. 없으면 건너뛰어도 됩니다.</div>
+    <div class="field">
+      <label class="field-label">컨설팅 TXT 파일 업로드</label>
+      <div class="dropzone" id="drop2" onclick="document.getElementById('file2').click()" ondragover="onDrag(event,'drop2')" ondragleave="offDrag('drop2')" ondrop="onDrop(event,'drop2','cTxt')">
+        <input type="file" id="file2" accept=".txt,.text" class="hidden" onchange="onFile(this,'drop2','cTxt')"/>
+        <div class="dropzone-icon">📂</div>
+        <div class="dropzone-label" id="drop2label">컨설팅 TXT 파일 클릭 또는 드래그</div>
+        <div class="dropzone-hint">전화 녹취 전사본, 컨설팅 정리 문서 등</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">또는 직접 붙여넣기</label>
+      <textarea id="cTxtArea" rows="7" placeholder="전문가 컨설팅 내용을 붙여넣으세요.&#10;없으면 비워두셔도 됩니다."></textarea>
+    </div>
+    <div class="alert alert-info" id="readyInfo" style="display:none">
+      <b>✓ 생성 준비 완료</b> &nbsp;—&nbsp; <span id="readyText"></span>
+    </div>
+    <div id="err2" class="alert alert-err hidden"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost btn-sm" onclick="goStep(1)">← 이전</button>
+      <button class="btn btn-primary" onclick="generate()">✨ 자기소개서 생성</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- STEP 3: 분석·소통 -->
+<div id="step3" class="hidden animate">
+  <div class="card">
+    <div class="card-title"><span class="num">4</span>AI 분석 결과 · 소통</div>
+    <div class="card-desc">AI가 학생부·인재상·컨설팅을 분석해 자소서 근거를 제시합니다. 내용을 확인하고 보완 의견을 나눈 뒤 최종 생성하세요.</div>
+
+    <!-- 분석 결과 영역 -->
+    <div class="analysis-section" id="analysisArea">
+      <div class="loading-box" id="analysisLoading" style="height:200px">
+        <div class="spinner"></div>
+        <p id="analysisLoadingMsg">자료를 분석하고 있습니다...</p>
+      </div>
+      <div id="analysisContent" class="hidden"></div>
+    </div>
+
+    <!-- 대화창 -->
+    <div id="chatSection" class="hidden">
+      <div class="analysis-section">
+        <div class="section-title">💬 보완 대화 <span class="badge">AI와 소통</span></div>
+        <div class="chat-box">
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="chat-input-row">
+            <textarea id="chatInput" placeholder="보완하고 싶은 내용, 추가할 경험, 수정 의견을 자유롭게 입력하세요.&#10;예) &quot;약물전달 실험에서 느낀 점을 더 강조해줘&quot;  /  Enter+Shift로 줄바꿈" onkeydown="onChatKey(event)"></textarea>
+            <button class="chat-send-btn" id="chatSendBtn" onclick="sendChat()">전송</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 최종 생성 확인 -->
+      <div class="confirm-row">
+        <p>✅ 대화 내용이 자소서 생성에 반영됩니다. 충분히 소통한 후 최종 생성하세요.</p>
+        <button class="btn btn-primary" onclick="goStep(4)">✨ 자소서 최종 생성</button>
+      </div>
+    </div>
+
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="goStep(2)">← 이전</button>
+      <div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- STEP 4: 결과 -->
+<div id="step4" class="hidden animate">
+  <div class="result-toolbar">
+    <div>
+      <h3 style="font-size:17px;font-weight:700" id="resultTitle">생성된 자기소개서</h3>
+      <p style="font-size:12px;color:var(--sub);margin-top:2px" id="resultSub">A4 1장 기준 · 학생부 × 인재상 × 전문가 조언 × 대화 반영</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="goStep(3)">← 소통으로 돌아가기</button>
+      <button class="btn btn-ghost btn-sm" onclick="regenerate()">↺ 재생성</button>
+      <button class="btn btn-secondary btn-sm" onclick="copyResult()">📋 복사</button>
+      <button class="btn btn-ghost btn-sm" onclick="downloadResult()">⬇ 저장</button>
+      <button class="btn btn-ghost btn-sm" onclick="goStep(0)">← 처음으로</button>
+    </div>
+  </div>
+  <div id="errResult" class="alert alert-err hidden" style="margin-bottom:14px"></div>
+  <div class="result-paper" id="resultPaper">
+    <div class="loading-box" id="loadingBox">
+      <div class="spinner"></div>
+      <p id="loadingMsg">자기소개서를 작성하고 있습니다...</p>
+    </div>
+    <div id="resultText" class="hidden"></div>
+  </div>
+</div>
+
+
+</main>
+
+<script>
+// ── 데이터 ─────────────────────────────────────────────
+const PRESETS = {
+  "UNIST (이공계열)":{univ:"UNIST",dept:"이공계열(바이오메디컬공학과)",
+    question:"1. 지원한 동기와 고등학교 재학기간 동안 들였던 노력, 기타 특별한 경험 등에 대해서 활동 중심으로 상세히 기술하여 주시기 바랍니다. (1000자 이내)\n\n2. 입학 후 학업계획과 학부과정 졸업 후 진로계획에 대해 기술하여 주시기 바랍니다. (1000자 이내)",
+    talent:"[UNIST 인재상]\n1. 질문에서 멈추지 않고 스스로 해결을 시도하는 탐구형 인재 (담대한 도전자)\n2. AI·다학문을 융합하는 컨버전스형 인재\n3. 인류 공동 번영을 지향하는 사회적 가치 실현 인재\n\n전형: 일반전형 / 이공계열(320명) / 서류 100%"},
+  "DGIST (기초학부)":{univ:"DGIST",dept:"기초학부",
+    question:"1. 지원 동기와 DGIST에서 이루고자 하는 목표를 기술해 주세요. (750자 이내)\n\n2. 고등학교 재학 중 학업 외 활동(탐구·실험·봉사 등) 중 가장 의미 있는 경험과 그 이유를 기술해 주세요. (750자 이내)",
+    talent:"[DGIST 인재상]\n1. 기초과학에 대한 깊은 열정과 탐구 능력을 갖춘 인재\n2. 융합적 사고로 새로운 지식을 창출하는 창의적 인재\n3. 사회와 인류에 기여하는 과학자·공학자로 성장할 잠재력\n\n전형: 일반전형 / 기초학부(100명) / 서류 100%\n※ 면접 있음"},
+  "KENTECH (에너지공학부)":{univ:"KENTECH",dept:"에너지공학부",
+    question:"1. 지원 동기와 에너지공학 분야에 관심을 갖게 된 계기를 기술해 주세요. (800자 이내)\n\n2. KENTECH 입학 후 학업계획 및 졸업 후 진로계획을 기술해 주세요. (800자 이내)",
+    talent:"[KENTECH 인재상]\n1. 에너지·환경 문제 해결에 헌신하는 사명감 있는 인재\n2. 이공계 기초역량과 융합·창의적 문제 해결 능력을 갖춘 인재\n3. 세계를 선도하는 에너지 분야 글로벌 리더 지향\n\n전형: 일반전형 / 에너지공학부(90명)\n1단계: 서류 100%(5배수) / 2단계: 1단계 50% + 면접 50% / 면접일: 11.30"},
+  "연세대 융합과학공학부":{univ:"연세대학교",dept:"융합과학공학부 (국제형·국내고)",
+    question:"1. 자신이 연세대학교 융합과학공학부에 지원하게 된 동기와 이 전공을 통해 이루고자 하는 목표를 기술해 주세요. (1000자 이내)\n\n2. 고등학교 재학 기간 중 가장 의미 있는 학습 경험 또는 연구 활동과 그 과정에서 배운 점을 기술해 주세요. (1000자 이내)",
+    talent:"[연세대 융합과학공학부 인재상]\n1. 이공계 핵심 역량과 인문·사회 통찰력을 겸비한 융합형 인재\n2. 글로벌 환경에서 창의적으로 문제를 해결하는 국제적 인재\n3. 공동체와 사회에 기여하는 리더십을 갖춘 인재\n\n전형: 국제형(국내고) / 45명\n1단계: 서류 100%(5배수) / 2단계: 1단계 60% + 면접 40%\n수능최저: 국/수 1포함 2합5, 영어 2등급, 한국사 4등급 / 면접: 11.29"},
+  "성균관대 자연과학계열":{univ:"성균관대학교",dept:"자연과학계열 (융합인재)",
+    question:"1. 자신이 이 학과(계열)에 지원하게 된 동기와 관련 활동 경험을 기술해 주세요. (1500자 이내)\n\n2. 성균관대학교에 입학하여 이루고자 하는 목표와 졸업 후 진로계획을 기술해 주세요.",
+    talent:"[성균관대 융합인재 인재상]\n1. 학문 간 경계를 허물고 기초과학·인문·예술을 융합하는 창의적 인재\n2. 자기주도적 학습과 연구 역량을 갖춘 성장 잠재력 있는 인재\n3. 글로벌 사회에서 균형 잡힌 시각으로 문제를 해결하는 인재\n\n전형: 융합인재 / 자연과학계열(35명) / 서류 100%"},
+  "중앙대 융합공학부":{univ:"중앙대학교",dept:"융합공학부 (성장형인재)",
+    question:"1. 지원 동기와 고등학교 시절 공학·과학 분야에 관심을 갖게 된 계기 및 관련 활동을 기술해 주세요. (1500자 이내)\n\n2. 입학 후 학업계획과 졸업 후 진로 목표를 기술해 주세요.",
+    talent:"[중앙대 성장형인재 인재상]\n1. 잠재력과 성장 가능성을 갖춘 인재\n2. 자기주도적 학습 역량과 탐구 정신을 갖춘 인재\n3. 공학·과학 분야의 전공 적합성과 융합적 사고를 갖춘 인재\n\n전형: 성장형인재 / 융합공학부(6명)\n1단계: 서류 100%(5배수) / 2단계: 1단계 70% + 면접 30% / 면접: 12.5"},
+  "경희대 약학과":{univ:"경희대학교",dept:"약학과 (네오르네상스)",
+    question:"1. 지원 동기와 약학에 관심을 갖게 된 계기, 관련 탐구·실험 경험을 기술해 주세요. (1500자 이내)\n\n2. 약학대학 입학 후 학업계획과 졸업 후 진로계획을 기술해 주세요.",
+    talent:"[경희대 네오르네상스 인재상]\n1. 문화·예술·과학·철학 등 다양한 분야에서 인간 존엄성을 실현하는 인재\n2. 자기주도적 탐구와 창의적 문제 해결 역량을 갖춘 인재\n3. 사회와 공동체에 봉사하고 기여하는 소명감을 가진 인재\n\n전형: 네오르네상스 / 약학과(9명)\n1단계: 서류 100%(3배수) / 2단계: 1단계 70% + 면접 30% / 면접: 12.6"},
+  "건국대 공대자유전공":{univ:"건국대학교",dept:"공과대학자유전공 (KU지역균형)",
+    question:"1. 지원 동기와 고등학교 시절 공학·과학 분야 탐구 경험을 기술해 주세요. (1500자 이내)\n\n2. 공과대학 입학 후 학업 계획과 졸업 후 진로계획을 기술해 주세요.",
+    talent:"[건국대 KU지역균형 인재상]\n1. 학교 교육과정에 충실하며 교과 성적이 우수한 인재\n2. 전공 분야에 대한 열정과 잠재적 역량을 가진 인재\n3. 공동체 생활에서 책임감과 리더십을 갖춘 인재\n\n전형: KU지역균형 / 공과대학자유전공(100명) / 교과 70% + 서류 30%"},
+  "동국대 열린전공":{univ:"동국대학교",dept:"열린전공(자연) (학교장추천)",
+    question:"1. 지원 동기와 고등학교 시절 학업 및 탐구 활동 경험을 기술해 주세요. (1500자 이내)\n\n2. 대학 입학 후 학업계획과 졸업 후 진로계획을 기술해 주세요.",
+    talent:"[동국대 학교장추천 인재상]\n1. 교과 성적이 우수하고 학교생활에 성실한 인재\n2. 전공 관련 기초 역량과 학업에 대한 열정을 갖춘 인재\n3. 다양한 학교 활동을 통해 인성과 공동체 역량을 기른 인재\n\n전형: 학교장추천 / 열린전공(자연)(50명) / 교과 70% + 서류 30%"},
+  "인하대 항공우주공학과":{univ:"인하대학교",dept:"항공우주공학과 (지역균형)",
+    question:"1. 지원 동기와 항공우주 분야에 관심을 갖게 된 계기 및 관련 활동을 기술해 주세요. (1500자 이내)\n\n2. 입학 후 학업계획과 졸업 후 진로계획을 기술해 주세요.",
+    talent:"[인하대 지역균형 인재상]\n1. 교과 성적이 우수하고 전공 분야에 대한 기초 역량이 탄탄한 인재\n2. 항공우주·공학 분야에 대한 진지한 관심과 탐구 경험을 가진 인재\n3. 성실성과 책임감을 바탕으로 공동체에 기여하는 인재\n\n전형: 지역균형 / 항공우주공학과(7명) / 교과 100%"},
+  "서울대":{univ:"서울대학교",dept:"자연과학대학 / 공과대학",
+    question:"1. 지원 동기와 고등학교 재학 중 학업에 기울인 노력과 배운 점을 기술해 주세요. (1500자 이내)\n\n2. 자신의 장점을 연계하여 앞으로의 학업 계획 및 진로를 기술해 주세요. (1500자 이내)",
+    talent:"[서울대 인재상]\n1. 학업능력이 탁월하고 지적 호기심이 왕성한 인재\n2. 학교 교육과정에 충실하며 자기주도적 학습 역량을 갖춘 인재\n3. 다양한 교육 경험을 통해 자신의 능력과 가능성을 보여주는 인재"},
+  "고려대":{univ:"고려대학교",dept:"이과대학 / 공과대학",
+    question:"1. 지원 동기와 관련 전공 분야에 관심을 갖게 된 계기를 기술해 주세요. (2000자 이내)\n\n2. 고려대학교에서의 학업 계획과 졸업 후 목표를 기술해 주세요. (2000자 이내)",
+    talent:"[고려대 인재상]\n1. 학업 역량이 탁월하고 지적 탐구심이 강한 인재 (학업우수형)\n2. 전공 분야의 잠재 역량과 발전 가능성을 갖춘 인재 (계열적합형)\n3. 올바른 가치관과 공동체 의식을 갖춘 도전적 인재"},
+  "서강대":{univ:"서강대학교",dept:"자연과학부 / 공학부",
+    question:"1. 지원 동기와 관련 전공 분야에서 수행한 탐구 활동을 기술해 주세요. (1500자 이내)\n\n2. 서강대학교에서의 학업계획과 졸업 후 진로계획을 기술해 주세요.",
+    talent:"[서강대 인재상]\n1. 기초 학문에 대한 깊은 이해와 탐구 정신을 갖춘 인재\n2. 사고의 유연성과 창의성으로 문제를 해결하는 인재\n3. 가톨릭 정신에 기반한 공동체 의식과 사회 기여 역량을 갖춘 인재"},
+  "한양대":{univ:"한양대학교",dept:"자연·공학 계열",
+    question:"1. 지원 동기와 관련 전공 분야 관심 계기 및 활동을 기술해 주세요. (1500자 이내)\n\n2. 한양대학교에서의 학업계획과 졸업 후 진로계획을 기술해 주세요.",
+    talent:"[한양대 인재상]\n1. 실용 학문과 창의적 탐구 정신을 겸비한 사랑의 실천가\n2. 자기주도적 역량과 도전 정신으로 성장하는 인재\n3. 더불어 사는 공동체를 위해 봉사하고 협력하는 인재"},
+  "이화여대":{univ:"이화여자대학교",dept:"자연과학대학 / 엘텍공과대학",
+    question:"1. 지원 동기와 전공 관련 탐구 활동 경험을 기술해 주세요. (1500자 이내)\n\n2. 이화여자대학교에서의 학업계획과 졸업 후 진로계획을 기술해 주세요.",
+    talent:"[이화여대 인재상]\n1. 기독교 정신에 기반한 봉사와 나눔을 실천하는 인재\n2. 학업 역량이 우수하고 전공 분야에 열정을 가진 인재\n3. 시대와 사회의 변화를 이끄는 창의적 여성 리더"},
+  "경희대 이공계":{univ:"경희대학교",dept:"이과대학 / 공과대학",
+    question:"1. 지원 동기와 고등학교 시절 의미 있는 탐구 경험을 기술해 주세요. (1500자 이내)\n\n2. 경희대학교에서의 학업계획과 졸업 후 진로계획을 기술해 주세요.",
+    talent:"[경희대 네오르네상스 인재상]\n1. 문화·예술·과학·철학이 어우러진 르네상스형 통합 인재\n2. 자기주도적 탐구로 창의적 문제를 해결하는 인재\n3. 지구 공동체를 위해 헌신하는 소명감을 가진 인재"},
+  "아주대":{univ:"아주대학교",dept:"자연과학대학 / 공과대학",
+    question:"1. 지원 동기와 관련 전공 분야 활동 경험을 기술해 주세요. (1500자 이내)\n\n2. 아주대학교에서의 학업계획과 졸업 후 진로계획을 기술해 주세요.",
+    talent:"[아주대 인재상]\n1. 도전 정신과 실용적 탐구 역량을 갖춘 인재\n2. 자기주도적으로 성장하며 목표를 향해 나아가는 인재\n3. 다양성을 존중하고 공동체에 기여하는 인재"},
+  "숙명·세종·광운대":{univ:"숙명여대 / 세종대 / 광운대",dept:"이공계 학부",
+    question:"1. 지원 동기와 전공 분야 관심 계기 및 탐구 활동 경험을 기술해 주세요.\n\n2. 입학 후 학업계획과 졸업 후 진로계획을 기술해 주세요.",
+    talent:"[이공계 학생부종합 공통 인재상]\n1. 전공 분야에 대한 진지한 관심과 기초 역량을 갖춘 인재\n2. 자기주도적 학습 습관과 성장 의지를 갖춘 인재\n3. 공동체 생활에서 협력·봉사하며 인성을 갖춘 인재"},
+};
+
+const G1=["UNIST (이공계열)","DGIST (기초학부)","KENTECH (에너지공학부)","연세대 융합과학공학부","성균관대 자연과학계열","중앙대 융합공학부","경희대 약학과","건국대 공대자유전공","동국대 열린전공","인하대 항공우주공학과"];
+const G2=["서울대","고려대","서강대","한양대","이화여대","경희대 이공계","아주대","숙명·세종·광운대"];
+
+// ── AI 공급자 정의 ──────────────────────────────────
+
+
+// ── 상태 ────────────────────────────────────────────
+let currentStep = 0;
+let activeProvider = localStorage.getItem('_active_provider') || 'claude';
+let fileData = {sTxt:'', cTxt:''};
+
+// localStorage에서 키/모델 불러오기
+const DEFAULT_MODELS = {
+  claude: 'claude-sonnet-4-6',
+  gemini: 'gemini-2.5-flash', // 수정: 올바른 공식 모델명으로 지정
+  grok:   'grok-4',
+  openai: 'gpt-4o',
+};
+// PROVIDERS 객체 내 defaultModel 변경
+const PROVIDERS = {
+  claude:  {label:'Claude',   icon:'🤖', color:'#7C3AED', defaultModel:'claude-sonnet-4-6'},
+  gemini:  {label:'Gemini',   icon:'✨', color:'#1A73E8', defaultModel:'gemini-2.5-flash'}, // 수정
+  grok:    {label:'Grok',     icon:'⚡', color:'#1DA1F2', defaultModel:'grok-4'},
+  openai:  {label:'ChatGPT',  icon:'💬', color:'#10A37F', defaultModel:'gpt-4o'},
+};
+function loadKeys(){
+  return {
+    claude:  {key: localStorage.getItem('_key_claude')||'',  model: localStorage.getItem('_model_claude')||DEFAULT_MODELS.claude},
+    gemini:  {key: localStorage.getItem('_key_gemini')||'',  model: localStorage.getItem('_model_gemini')||DEFAULT_MODELS.gemini},
+    grok:    {key: localStorage.getItem('_key_grok')||'',    model: localStorage.getItem('_model_grok')||DEFAULT_MODELS.grok},
+    openai:  {key: localStorage.getItem('_key_openai')||'',  model: localStorage.getItem('_model_openai')||DEFAULT_MODELS.openai},
+  };
+}
+
+// ── 초기화 ──────────────────────────────────────────
+window.onload = function(){
+  renderChips('chips1',G1);
+  renderChips('chips2',G2);
+  renderStepBar();
+  renderProviderTabs();
+  syncModalInputs();
+  updateHeaderBadge();
+  document.getElementById('questionInput').value="1. 지원한 동기와 고등학교 재학기간 동안 들였던 노력, 기타 특별한 경험 등에 대해서 활동 중심으로 상세히 기술하여 주시기 바랍니다. (1000자 이내)\n\n2. 입학 후 학업계획과 학부과정 졸업 후 진로계획에 대해 기술하여 주시기 바랍니다. (1000자 이내)";
+};
+
+function renderChips(id, keys){
+  document.getElementById(id).innerHTML = keys.map(k=>
+    `<button class="chip" id="chip_${esc(k)}" onclick="selectPreset('${k}')">${k}</button>`
+  ).join('');
+}
+function esc(s){return s.replace(/[^a-zA-Z0-9가-힣]/g,'_')}
+
+function selectPreset(key){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  const el=document.getElementById('chip_'+esc(key));
+  if(el) el.classList.add('active');
+  const p=PRESETS[key];
+  if(p){
+    document.getElementById('univInput').value=p.univ;
+    document.getElementById('deptInput').value=p.dept;
+    document.getElementById('questionInput').value=p.question;
+    document.getElementById('talentInput').value=p.talent;
+  }
+}
+
+// ── 공급자 탭 ────────────────────────────────────────
+function renderProviderTabs(){
+  const cfg = loadKeys();
+  const tabs = document.getElementById('providerTabs');
+  tabs.innerHTML = Object.entries(PROVIDERS).map(([id,p])=>{
+    const hasKey = !!cfg[id].key;
+    const isActive = id===activeProvider;
+    return `<button class="ptab${isActive?' active':''}${hasKey?' ok':''}" id="ptab_${id}" onclick="switchProvider('${id}')">${p.icon} ${p.label}</button>`;
+  }).join('');
+}
+
+function switchProvider(id){
+  activeProvider = id;
+  localStorage.setItem('_active_provider', id);
+  renderProviderTabs();
+  updateHeaderBadge();
+}
+
+function updateHeaderBadge(){
+  const cfg = loadKeys();
+  const p = PROVIDERS[activeProvider];
+  const hasKey = !!cfg[activeProvider].key;
+  const model = cfg[activeProvider].model;
+  document.getElementById('mdot').className = 'mdot' + (hasKey?' ok':'');
+  document.getElementById('modelBadgeText').textContent =
+    hasKey ? `${p.icon} ${p.label} · ${model}` : `${p.icon} ${p.label} — 키 미설정`;
+}
+
+// ── API 설정 모달 ────────────────────────────────────
+function openApiModal(){
+  syncModalInputs();
+  document.getElementById('apiModal').classList.remove('hidden');
+}
+function closeApiModal(){
+  document.getElementById('apiModal').classList.add('hidden');
+}
+function syncModalInputs(){
+  const cfg = loadKeys();
+  Object.keys(cfg).forEach(id=>{
+    const ki = document.getElementById('key_'+id);
+    if(ki) ki.value = cfg[id].key;
+    // 모델 input에 값 세팅
+    const mi = document.getElementById('model_'+id);
+    if(mi) mi.value = cfg[id].model;
+    // 프리셋 select 동기화
+    const ps = document.getElementById('model_'+id+'_preset');
+    if(ps){
+      const opts = Array.from(ps.options).map(o=>o.value);
+      ps.value = opts.includes(cfg[id].model) ? cfg[id].model : '__custom__';
+    }
+    updateProviderCard(id, !!cfg[id].key);
+  });
+}
+// 프리셋 선택 → input에 값 반영
+function applyPreset(id){
+  const ps = document.getElementById('model_'+id+'_preset');
+  const mi = document.getElementById('model_'+id);
+  if(!ps||!mi) return;
+  if(ps.value !== '__custom__') mi.value = ps.value;
+  else mi.focus();
+}
+// 직접 입력 → 프리셋 select를 '직접 입력'으로
+function onModelInput(id){
+  const ps = document.getElementById('model_'+id+'_preset');
+  const mi = document.getElementById('model_'+id);
+  if(!ps||!mi) return;
+  const opts = Array.from(ps.options).map(o=>o.value);
+  ps.value = opts.includes(mi.value) ? mi.value : '__custom__';
+}
+// ✕ 버튼 → 기본값으로 초기화
+function clearModel(id){
+  const defaults = {claude:'claude-sonnet-4-6',gemini:'gemini-3.6-flash',grok:'grok-4',openai:'gpt-4o'};
+  const mi = document.getElementById('model_'+id);
+  const ps = document.getElementById('model_'+id+'_preset');
+  if(mi) mi.value = defaults[id]||'';
+  if(ps) ps.value = defaults[id]||'';
+}
+function onKeyInput(id){
+  const v = document.getElementById('key_'+id).value.trim();
+  updateProviderCard(id, !!v);
+}
+function updateProviderCard(id, hasKey){
+  const card = document.getElementById('pc_'+id);
+  const badge = document.getElementById('ps_'+id);
+  if(!card||!badge) return;
+  if(hasKey){card.classList.add('configured');badge.className='provider-status st-ok';badge.textContent='✓ 설정됨';}
+  else{card.classList.remove('configured');badge.className='provider-status st-no';badge.textContent='미설정';}
+}
+function saveAllKeys(){
+  ['claude','gemini','grok','openai'].forEach(id=>{
+    const k=document.getElementById('key_'+id).value.trim();
+    const m=document.getElementById('model_'+id).value;
+    if(k) localStorage.setItem('_key_'+id, k);
+    else localStorage.removeItem('_key_'+id);
+    localStorage.setItem('_model_'+id, m);
+  });
+  closeApiModal();
+  renderProviderTabs();
+  updateHeaderBadge();
+  showToast('✓ 설정이 저장되었습니다');
+}
+
+// ── 스텝 ─────────────────────────────────────────────
+const STEP_LABELS=['대학·인재상','학생부','전문가 조언','분석·소통','자소서 생성'];
+function renderStepBar(){
+  document.getElementById('stepbar').innerHTML = STEP_LABELS.map((label,i)=>{
+    const done=i<currentStep, active=i===currentStep;
+    const lL=i>0?`<div class="step-line${done||active?' done':''}"></div>`:'<div style="flex:1"></div>';
+    const lR=i<STEP_LABELS.length-1?`<div class="step-line${done?' done':''}"></div>`:'<div style="flex:1"></div>';
+    return`<div class="step-item"><div class="step-line-wrap">${lL}<div class="step-circle${done?' done':active?' active':''}">${done?'✓':i+1}</div>${lR}</div><span class="step-label${active?' active':''}">${label}</span></div>`;
+  }).join('');
+}
+
+function goStep(n){
+  if(n>currentStep && currentStep===0){
+    if(!document.getElementById('talentInput').value.trim()){showErr('err0','인재상을 입력해 주세요.');return;}
+    hideErr('err0');
+  }
+  if(n>currentStep && (currentStep===2||currentStep===3)){
+    const cfg=loadKeys();
+    if(!cfg[activeProvider].key){
+      openApiModal();
+      showToast(`${PROVIDERS[activeProvider].label} API 키를 먼저 설정해 주세요`);
+      return;
+    }
+  }
+  document.getElementById('step'+currentStep).classList.add('hidden');
+  currentStep=n;
+  const el=document.getElementById('step'+n);
+  el.classList.remove('hidden');
+  el.classList.add('animate');
+  setTimeout(()=>el.classList.remove('animate'),400);
+  renderStepBar();
+  if(n===2){
+    const cfg=loadKeys();
+    const p=PROVIDERS[activeProvider];
+    const hasKey=!!cfg[activeProvider].key;
+    const sTxt=document.getElementById('sTxtArea').value||fileData.sTxt;
+    document.getElementById('readyText').textContent=
+      `${document.getElementById('univInput').value||'대학 미입력'} | 학생부: ${sTxt?'✓':'미입력'} | AI: ${p.icon} ${p.label} ${hasKey?'✓':'⚠ 키 미설정'}`;
+    document.getElementById('readyInfo').style.display='block';
+  }
+  if(n===3) startAnalysis();
+  if(n===4) generateFinal();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── 파일 ─────────────────────────────────────────────
+function onDrag(e,id){e.preventDefault();document.getElementById(id).classList.add('drag');}
+function offDrag(id){document.getElementById(id).classList.remove('drag');}
+function onDrop(e,id,key){e.preventDefault();offDrag(id);const f=e.dataTransfer.files[0];if(f)readFileInto(f,id,key);}
+function onFile(input,id,key){if(input.files[0])readFileInto(input.files[0],id,key);}
+function readFileInto(f,id,key){
+  const r=new FileReader();
+  r.onload=e=>{
+    fileData[key]=e.target.result;
+    if(key==='sTxt')document.getElementById('sTxtArea').value=e.target.result;
+    if(key==='cTxt')document.getElementById('cTxtArea').value=e.target.result;
+    const dz=document.getElementById(id);
+    dz.classList.add('has-file');dz.classList.remove('drag');
+    document.getElementById(id+'label').textContent='📄 '+f.name;
+  };
+  r.readAsText(f,'utf-8');
+}
+
+// ── 생성 ─────────────────────────────────────────────
+
+// ── 분석 데이터 수집 헬퍼 ─────────────────────────────
+function collectInputs(){
+  return {
+    univ:     document.getElementById('univInput').value||'',
+    dept:     document.getElementById('deptInput').value||'',
+    question: document.getElementById('questionInput').value||'',
+    talent:   document.getElementById('talentInput').value||'',
+    sTxt:     document.getElementById('sTxtArea').value||fileData.sTxt||'',
+    cTxt:     document.getElementById('cTxtArea').value||fileData.cTxt||'',
+  };
+}
+
+// ── STEP 3: 분석 시작 ────────────────────────────────
+let chatHistory = [];   // {role, content}
+let analysisResult = '';
+
+async function startAnalysis(){
+  chatHistory = [];
+  analysisResult = '';
+  document.getElementById('analysisLoading').classList.remove('hidden');
+  document.getElementById('analysisContent').classList.add('hidden');
+  document.getElementById('chatSection').classList.add('hidden');
+  document.getElementById('chatMessages').innerHTML = '';
+
+  const cfg = loadKeys();
+  const d = collectInputs();
+  const p = PROVIDERS[activeProvider];
+  document.getElementById('analysisLoadingMsg').textContent =
+    `${p.icon} ${p.label}이(가) 자료를 분석하고 있습니다...`;
+
+  const sys = `당신은 대한민국 최고 수준의 대학 입시 자기소개서 전문가입니다.
+학생부·인재상·컨설팅을 분석해 자소서 각 문항에 대한 근거와 소재를 제시하고,
+학생과 대화하며 최종 자소서 방향을 함께 정합니다.`;
+
+  const usr = `다음 자료를 분석해 자소서 각 문항에 대한 근거와 소재를 정리해 주세요.
+
+【 지원 대학·학과 】 ${d.univ} ${d.dept}
+【 자소서 문항 】
+${d.question}
+【 인재상 】
+${d.talent}
+【 학생부 내용 】
+${d.sTxt||'(미입력)'}
+【 전문가 컨설팅 조언 】
+${d.cTxt||'(없음)'}
+
+---
+아래 형식으로 각 문항별 분석 결과를 제시해 주세요.
+
+[문항 N 분석]
+▶ 핵심 소재: (학생부에서 찾은 핵심 활동·경험 2~3가지)
+▶ 인재상 연결: (해당 소재가 인재상의 어떤 항목과 연결되는지)
+▶ 스토리 흐름: (도입→탐구→성장→지원동기 흐름 한 문장으로)
+▶ 근거 ①: [내용] ... / [근거] 학생부 ...
+▶ 근거 ②: [내용] ... / [근거] 학생부 ...
+▶ 보완 필요 사항: (학생에게 추가로 확인하거나 보완을 요청할 내용)
+
+분석 후 마지막에 학생에게 확인하고 싶은 질문 1~2개를 제시해 주세요.`;
+
+  try{
+    const text = await callAI(cfg, sys, usr);
+    analysisResult = text;
+    document.getElementById('analysisLoading').classList.add('hidden');
+    // 분석 결과 렌더링
+    document.getElementById('analysisContent').innerHTML = renderAnalysis(text);
+    document.getElementById('analysisContent').classList.remove('hidden');
+    document.getElementById('chatSection').classList.remove('hidden');
+    // 첫 AI 메시지 = 분석 요약 + 질문
+    addChatMsg('ai', text);
+    chatHistory.push({role:'user', content: usr});
+    chatHistory.push({role:'assistant', content: text});
+  }catch(e){
+    console.error('[startAnalysis 오류]', e);
+    document.getElementById('analysisLoading').classList.add('hidden');
+    document.getElementById('analysisContent').innerHTML =
+      `<div class="alert alert-err" style="display:block!important">
+        <b>⚠ 분석 오류</b><br>${e.message}<br><br>
+        <small>• API 키가 올바른지 확인하세요<br>• 모델명이 정확한지 확인하세요<br>• 브라우저 개발자도구(F12) → Console 탭에서 상세 오류를 확인할 수 있습니다</small>
+        <br><br><button class="btn btn-ghost btn-sm" onclick="startAnalysis()">↺ 재시도</button>
+      </div>`;
+    document.getElementById('analysisContent').classList.remove('hidden');
+    document.getElementById('analysisContent').style.display = 'block';
+  }
+}
+
+// 분석 결과 HTML 렌더링
+function renderAnalysis(text){
+  // 문항별 파싱
+  const blocks = text.split(/\[문항\s*\d+\s*분석\]/g).filter(b=>b.trim());
+  const titles = [...text.matchAll(/\[문항\s*(\d+)\s*분석\]/g)].map(m=>`문항 ${m[1]} 분석`);
+  if(!blocks.length) return `<div class="evidence-card"><div class="ev-content">${text.replace(/\n/g,'<br>')}</div></div>`;
+
+  return `<div class="analysis-section">
+    <div class="section-title">📊 AI 분석 결과 <span class="badge">${titles.length}개 문항</span></div>
+    ${blocks.map((b,i)=>{
+      const lines = b.trim().split('\n');
+      const rows = lines.map(l=>{
+        if(l.startsWith('▶ 핵심 소재:')) return `<div style="margin-bottom:6px"><b style="color:var(--accent)">핵심 소재</b><br>${l.replace('▶ 핵심 소재:','').trim()}</div>`;
+        if(l.startsWith('▶ 인재상 연결:')) return `<div style="margin-bottom:6px"><b style="color:var(--ok)">인재상 연결</b><br>${l.replace('▶ 인재상 연결:','').trim()}</div>`;
+        if(l.startsWith('▶ 스토리 흐름:')) return `<div style="margin-bottom:6px"><b style="color:var(--accent-d)">스토리 흐름</b><br>${l.replace('▶ 스토리 흐름:','').trim()}</div>`;
+        if(l.match(/^▶ 근거/)) return `<div style="margin-bottom:5px;padding:8px 10px;background:var(--surface2);border-radius:7px;border-left:3px solid var(--accent);font-size:13px">${l.replace('▶ ','').replace(/\[내용\]/g,'<b>내용</b>').replace(/\[근거\]/g,'<b style="color:var(--ok)">근거</b>')}</div>`;
+        if(l.startsWith('▶ 보완 필요:')) return `<div style="margin-top:8px;padding:8px 10px;background:var(--warn-l);border-radius:7px;font-size:13px;color:var(--warn)"><b>보완 필요</b><br>${l.replace('▶ 보완 필요 사항:','').replace('▶ 보완 필요:','').trim()}</div>`;
+        return `<div style="font-size:13px;color:var(--sub);line-height:1.6">${l}</div>`;
+      }).join('');
+      return `<div class="evidence-card"><div class="ev-num">${titles[i]||'분석'}</div>${rows}</div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ── 채팅 메시지 추가 ────────────────────────────────
+function addChatMsg(role, text){
+  const box = document.getElementById('chatMessages');
+  const label = role==='ai' ? '🤖 AI 분석가' : '👤 나';
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `<span class="msg-label">${label}</span><div class="msg-bubble">${text.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function addTyping(){
+  const box = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'chat-typing'; div.id = 'typingIndicator';
+  div.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div><span>AI가 응답 중...</span>';
+  box.appendChild(div); box.scrollTop = box.scrollHeight;
+}
+function removeTyping(){ const el=document.getElementById('typingIndicator'); if(el)el.remove(); }
+
+function onChatKey(e){
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); }
+}
+
+async function sendChat(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  document.getElementById('chatSendBtn').disabled = true;
+
+  addChatMsg('user', text);
+  chatHistory.push({role:'user', content: text});
+  addTyping();
+
+  const cfg = loadKeys();
+  const d = collectInputs();
+  const sys = `당신은 대한민국 최고 수준의 대학 입시 자기소개서 전문가입니다.
+학생과 대화하며 자소서 방향을 함께 정합니다.
+학생의 의견과 추가 정보를 반영해 근거를 보완하고, 구체적인 방향을 제시하세요.
+항상 간결하고 명확하게 답변하고, 필요시 추가 질문을 1개만 하세요.
+
+참고 자료 (학생부·인재상·컨설팅):
+지원: ${d.univ} ${d.dept}
+인재상: ${d.talent.substring(0,300)}
+학생부 요약: ${d.sTxt.substring(0,400)}`;
+
+  try{
+    const reply = await callAI(cfg, sys, chatHistory);
+    removeTyping();
+    addChatMsg('ai', reply);
+    chatHistory.push({role:'assistant', content: reply});
+  }catch(e){
+    removeTyping();
+    addChatMsg('ai', `⚠ 오류: ${e.message}`);
+  }
+  document.getElementById('chatSendBtn').disabled = false;
+  input.focus();
+}
+
+// ── STEP 4: 최종 자소서 생성 ─────────────────────────
+async function generateFinal(){
+  const cfg = loadKeys();
+  const d = collectInputs();
+  const p = PROVIDERS[activeProvider];
+
+  document.getElementById('resultTitle').textContent = `${d.univ} ${d.dept} — 자기소개서`;
+  document.getElementById('resultSub').textContent = `A4 1장 기준 · ${p.icon} ${p.label} (${cfg[activeProvider].model}) · 대화 내용 반영`;
+  document.getElementById('loadingBox').classList.remove('hidden');
+  document.getElementById('resultText').classList.add('hidden');
+  document.getElementById('errResult').classList.add('hidden');
+  document.getElementById('loadingMsg').textContent = `${p.icon} ${p.label}이(가) 대화 내용을 반영해 자소서를 작성합니다...`;
+
+  // 대화 내용 요약
+  const chatSummary = chatHistory.length > 2
+    ? chatHistory.slice(2).map(m=>`[${m.role==='user'?'학생':'AI'}] ${m.content.substring(0,200)}`).join('\n')
+    : '(대화 없음 — 분석 결과만 반영)';
+
+  const sys = `당신은 대한민국 최고 수준의 대학 입시 자기소개서 전문가입니다.
+학생부, 대학 인재상, 전문가 컨설팅, AI 분석 결과, 그리고 학생과의 대화 내용을 모두 종합하여
+설득력 있고 진정성 있는 자기소개서를 작성합니다.
+
+작성 원칙:
+- 반드시 학생부에 기재된 실제 활동만 사용 (없는 내용 창작 절대 금지)
+- 학생과의 대화에서 나온 의견·보완 요청을 최우선 반영
+- 활동의 단순 나열이 아닌 탐구 흐름·의문·성장 스토리 중심
+- 인재상 키워드가 자연스럽게 녹아들도록
+- A4 1장 분량 (각 문항 약 750~900자, 총 1500~1800자)
+- 문항 번호와 제목 명시
+- 자연스러운 한국어, 과장 없는 진정성 있는 문체`;
+
+  const usr = `다음 자료를 모두 종합하여 자기소개서를 완성해 주세요.
+
+【 지원 대학·학과 】 ${d.univ} ${d.dept}
+【 자소서 문항 】
+${d.question}
+【 인재상 및 전형 정보 】
+${d.talent}
+【 학생부 내용 】
+${d.sTxt||'(미입력)'}
+【 전문가 컨설팅 조언 】
+${d.cTxt||'(없음)'}
+【 AI 분석 결과 】
+${analysisResult.substring(0,600)}
+【 학생과의 대화 내용 (보완 의견) 】
+${chatSummary}
+
+위 모든 자료, 특히 학생과의 대화에서 나온 보완 의견을 최우선 반영하여 자소서를 완성해 주세요.`;
+
+  try{
+    const text = await callAI(cfg, sys, usr);
+    document.getElementById('loadingBox').classList.add('hidden');
+    const rt = document.getElementById('resultText');
+    rt.textContent = text; rt.classList.remove('hidden');
+  }catch(e){
+    document.getElementById('loadingBox').classList.add('hidden');
+    const eb = document.getElementById('errResult');
+    eb.innerHTML = `<b>⚠ 오류 (${p.label})</b><br>${e.message}`;
+    eb.classList.remove('hidden');
+  }
+}
+
+function regenerate(){ generateFinal(); }
+
+// ── 공통 AI 호출 ──────────────────────────────────────
+async function callAI(cfg, sys, usr){
+  const id = activeProvider;
+  const key = (cfg[id] && cfg[id].key) ? cfg[id].key : '';
+  const model = (cfg[id] && cfg[id].model) ? cfg[id].model : PROVIDERS[id]?.defaultModel || '';
+
+  if(!key) throw new Error(`${PROVIDERS[id]?.label || id} API 키가 설정되지 않았습니다. 우측 상단 AI 설정 버튼을 눌러 키를 입력해 주세요.`);
+  if(!model) throw new Error('모델이 선택되지 않았습니다.');
+
+  console.log('[callAI] provider:', id, 'model:', model, 'key prefix:', key.substring(0,8)+'...');
+
+  if(id==='claude')  return await callClaude(key, model, sys, usr);
+  if(id==='gemini')  return await callGemini(key, model, sys, typeof usr==='string'?usr:usr.map(m=>`[${m.role}] ${m.content}`).join('\n'));
+  if(id==='grok')    return await callOpenAICompat('https://api.x.ai/v1', key, model, sys, usr);
+  if(id==='openai')  return await callOpenAICompat('https://api.openai.com/v1', key, model, sys, usr);
+  throw new Error('알 수 없는 공급자: ' + id);
+}
+
+async function generate(){} // 하위 호환 유지 (실제로는 generateFinal 사용)
+
+
+// ── API 호출 함수들 ───────────────────────────────────
+
+async function callClaude(key, model, sys, usr){
+  const messages = Array.isArray(usr) ? usr : [{role:'user', content: String(usr)}];
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model, max_tokens:2048, system:sys, messages})
+  });
+  if(!res.ok){
+    let errMsg = `HTTP ${res.status}`;
+    try { const e=await res.json(); errMsg = e.error?.message || errMsg; } catch(e2){}
+    throw new Error(errMsg);
+  }
+  const d=await res.json();
+  return d.content?.map(b=>b.text||'').join('')||'';
+}
+
+async function callGemini(key, model, sys, usr) {
+  // 공백 제거 및 키 검증
+  const cleanKey = key.trim();
+  const cleanModel = model.trim();
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${cleanKey}`;
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      system_instruction: {
+        parts: [{ text: sys }]
+      },
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: typeof usr === 'string' ? usr : JSON.stringify(usr) }]
+        }
+      ],
+      generationConfig: {
+        maxOutputTokens: 2048,
+        temperature: 0.7
+      }
+    })
+  });
+
+  if (!response.ok) {
+    let errorDetail = `HTTP 에러 ${response.status}`;
+    try {
+      const errJson = await response.json();
+      errorDetail = errJson.error?.message || errorDetail;
+    } catch (e) {}
+    throw new Error(`[Gemini API 오류] ${errorDetail}`);
+  }
+
+  const data = await response.json();
+  const candidate = data.candidates?.[0];
+  
+  if (candidate?.finishReason === 'SAFETY') {
+    throw new Error('Gemini 안전 정책에 의해 답변 생성이 차단되었습니다.');
+  }
+
+  const resultText = candidate?.content?.parts?.map(p => p.text || '').join('');
+  if (!resultText) {
+    throw new Error('Gemini로부터 빈 응답을 받았습니다.');
+  }
+
+  return resultText;
+}
+
+async function callOpenAICompat(baseUrl, key, model, sys, usr){
+  let messages = [{role:'system',content:sys}];
+  if(Array.isArray(usr)){
+    messages = messages.concat(usr);
+  } else {
+    messages.push({role:'user',content:usr});
+  }
+  const res=await fetch(`${baseUrl}/chat/completions`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
+    body:JSON.stringify({model,max_tokens:2048,messages})
+  });
+  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||`HTTP ${res.status}`);}
+  const d=await res.json();
+  return d.choices?.[0]?.message?.content||'';
+}
+
+// ── 결과 저장 ─────────────────────────────────────────
+function copyResult(){
+  navigator.clipboard.writeText(document.getElementById('resultText').textContent)
+    .then(()=>showToast('📋 클립보드에 복사되었습니다'));
+}
+function downloadResult(){
+  const t=document.getElementById('resultText').textContent;
+  const univ=document.getElementById('univInput').value||'대학';
+  const p=PROVIDERS[activeProvider];
+  const a=document.createElement('a');
+  a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(t);
+  a.download=`자기소개서_${univ}_${p.label}.txt`;
+  a.click();
+  showToast('⬇ 파일로 저장되었습니다');
+}
+
+// ── 유틸 ─────────────────────────────────────────────
+function showErr(id,msg){const el=document.getElementById(id);el.textContent=msg;el.classList.remove('hidden');}
+function hideErr(id){document.getElementById(id).classList.add('hidden');}
+let tt;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.remove('hidden');
+  clearTimeout(tt);tt=setTimeout(()=>t.classList.add('hidden'),2800);
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeApiModal();});
+</script>
+</body>
+</html>
