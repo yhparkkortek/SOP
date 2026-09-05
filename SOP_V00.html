@@ -687,7 +687,7 @@ function onModelInput(id){
 }
 // ✕ 버튼 → 기본값으로 초기화
 function clearModel(id){
-  const defaults = {claude:'claude-sonnet-4-6',gemini:'gemini-3.6-flash',grok:'grok-4',openai:'gpt-4o'};
+  const defaults = {claude:'claude-sonnet-4-6',gemini:'gemini-2.5-flash',grok:'grok-4',openai:'gpt-4o'}; // gemini-2.5-flash로 통일
   const mi = document.getElementById('model_'+id);
   const ps = document.getElementById('model_'+id+'_preset');
   if(mi) mi.value = defaults[id]||'';
