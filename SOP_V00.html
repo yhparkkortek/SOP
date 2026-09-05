@@ -27,13 +27,9 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 .site-name{font-weight:700;font-size:16px}
 .site-sub{font-size:12px;color:var(--muted)}
 .header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-/* AI 공급자 선택 탭 */
-.provider-tabs{display:flex;gap:0;border:1px solid var(--border2);border-radius:8px;overflow:hidden;background:var(--surface2)}
-.ptab{padding:5px 14px;font-size:12px;font-weight:700;font-family:'Noto Sans KR',sans-serif;border:none;background:transparent;color:var(--sub);cursor:pointer;transition:all .15s;border-right:1px solid var(--border2)}
-.ptab:last-child{border-right:none}
-.ptab.active{background:var(--surface);color:var(--text)}
-.ptab.ok{color:var(--ok)}
-.ptab.active.ok{background:var(--ok-l)}
+/* AI 공급자 드롭다운 */
+.provider-select{padding:5px 10px;font-size:13px;font-weight:600;font-family:'Noto Sans KR',sans-serif;border:1.5px solid var(--border2);border-radius:8px;background:var(--surface);color:var(--text);cursor:pointer;outline:none;min-width:130px;transition:border-color .15s}
+.provider-select:hover,.provider-select:focus{border-color:var(--accent)}
 /* 모델 dot */
 .model-badge{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:5px 13px;border:1px solid var(--border2);border-radius:20px;color:var(--sub);cursor:pointer;background:var(--surface2);transition:border-color .15s;white-space:nowrap}
 .model-badge:hover{border-color:var(--accent)}
@@ -174,10 +170,8 @@ textarea{resize:vertical}
   .site-sub{display:none}
   .logo{width:26px;height:26px;font-size:14px;flex-shrink:0}
   .header-right{gap:5px;flex-shrink:0;margin-left:auto}
-  /* 공급자 탭: 가로 스크롤 */
-  .provider-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:calc(100vw - 160px);scrollbar-width:none}
-  .provider-tabs::-webkit-scrollbar{display:none}
-  .ptab{padding:4px 8px;font-size:10px;white-space:nowrap}
+  /* 공급자 드롭다운 */
+  .provider-select{font-size:11px;padding:4px 6px;min-width:90px}
   /* 모델 배지 */
   .model-badge{padding:4px 10px;font-size:11px}
   .mdot{width:6px;height:6px}
@@ -289,8 +283,7 @@ textarea{resize:vertical}
 /* ── 초소형 모바일 (≤390px, iPhone SE 등) ── */
 @media(max-width:390px){
   header{height:48px}
-  .provider-tabs{max-width:calc(100vw - 140px)}
-  .ptab{padding:3px 6px;font-size:9px}
+  .provider-select{font-size:10px;padding:3px 5px;min-width:80px}
   .model-badge{padding:3px 8px;font-size:10px}
   .step-label{display:none}
   .card{padding:14px 12px}
@@ -349,8 +342,8 @@ textarea{resize:vertical}
   <span class="site-name">자소서 AI 작성기</span>
   <span class="site-sub">대입 자기소개서 자동 작성 도우미</span>
   <div class="header-right">
-    <!-- AI 공급자 탭 -->
-    <div class="provider-tabs" id="providerTabs"></div>
+    <!-- AI 공급자 드롭다운 -->
+    <select class="provider-select" id="providerSelect" onchange="switchProvider(this.value)"></select>
     <!-- 현재 모델 배지 -->
     <button class="model-badge" onclick="openApiModal()">
       <span class="mdot" id="mdot"></span>
@@ -857,19 +850,18 @@ function isFreeModel(providerId, model){
 
 function renderProviderTabs(){
   const cfg = loadKeys();
-  const tabs = document.getElementById('providerTabs');
-  tabs.innerHTML = Object.entries(PROVIDERS).map(([id,p])=>{
+  const sel = document.getElementById('providerSelect');
+  sel.innerHTML = Object.entries(PROVIDERS).map(([id,p])=>{
     const hasKey  = !!cfg[id].key;
-    const isActive = id===activeProvider;
-    const freeTag = FREE_PROVIDERS.has(id) ? ' 🟢' : '';
-    return `<button class="ptab${isActive?' active':''}${hasKey?' ok':''}" id="ptab_${id}" onclick="switchProvider('${id}')">${p.icon} ${p.label}${freeTag}</button>`;
+    const freeTag = FREE_PROVIDERS.has(id) ? ' 🟢' : (hasKey ? ' 💰' : '');
+    return `<option value="${id}"${id===activeProvider?' selected':''}>${p.icon} ${p.label}${freeTag}</option>`;
   }).join('');
 }
 
 function switchProvider(id){
   activeProvider = id;
   localStorage.setItem('_active_provider', id);
-  renderProviderTabs();
+  // select 요소의 선택값은 onchange가 이미 처리하므로 배지만 갱신
   updateHeaderBadge();
 }
 
