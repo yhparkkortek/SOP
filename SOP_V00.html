@@ -1039,29 +1039,61 @@ async function generate(){} // 하위 호환 유지 (실제로는 generateFinal 
 
 // ── API 호출 함수들 ───────────────────────────────────
 
-async function callClaude(key, model, sys, usr){
-  const messages = Array.isArray(usr) ? usr : [{role:'user', content: String(usr)}];
-  const res=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model, max_tokens:2048, system:sys, messages})
-  });
-  if(!res.ok){
-    let errMsg = `HTTP ${res.status}`;
-    try { const e=await res.json(); errMsg = e.error?.message || errMsg; } catch(e2){}
-    throw new Error(errMsg);
+async function callClaude(key, model, sys, usr) {
+  const cleanKey = key ? key.trim() : '';
+  const cleanModel = model ? model.trim() : 'claude-3-5-sonnet-20241022';
+
+  let messages = [];
+  if (Array.isArray(usr)) {
+    messages = usr;
+  } else {
+    messages = [{ role: 'user', content: String(usr || '') }];
   }
-  const d=await res.json();
-  return d.content?.map(b=>b.text||'').join('')||'';
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': cleanKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: cleanModel,
+      max_tokens: 2048,
+      system: sys,
+      messages: messages
+    })
+  });
+
+  if (!res.ok) {
+    let errMsg = `HTTP ${res.status}`;
+    try {
+      const e = await res.json();
+      errMsg = e.error?.message || errMsg;
+    } catch (e2) {}
+    throw new Error(`[Claude API 오류] ${errMsg}`);
+  }
+
+  const d = await res.json();
+  return d.content?.map(b => b.text || '').join('') || '';
 }
 
 async function callGemini(key, model, sys, usr) {
-  // 공백 제거 및 키 검증
-  const cleanKey = key.trim();
-  const cleanModel = model.trim();
+  const cleanKey = key ? key.trim() : '';
+  const cleanModel = model ? model.trim() : 'gemini-2.5-flash';
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${cleanKey}`;
-  
+
+  let userContentText = '';
+  if (typeof usr === 'string') {
+    userContentText = usr;
+  } else if (Array.isArray(usr)) {
+    userContentText = usr.map(m => (typeof m === 'string' ? m : m.content || JSON.stringify(m))).join('\n');
+  } else {
+    userContentText = JSON.stringify(usr);
+  }
+
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -1069,12 +1101,12 @@ async function callGemini(key, model, sys, usr) {
     },
     body: JSON.stringify({
       system_instruction: {
-        parts: [{ text: sys }]
+        parts: [{ text: sys || '' }]
       },
       contents: [
         {
           role: 'user',
-          parts: [{ text: typeof usr === 'string' ? usr : JSON.stringify(usr) }]
+          parts: [{ text: userContentText }]
         }
       ],
       generationConfig: {
@@ -1095,7 +1127,7 @@ async function callGemini(key, model, sys, usr) {
 
   const data = await response.json();
   const candidate = data.candidates?.[0];
-  
+
   if (candidate?.finishReason === 'SAFETY') {
     throw new Error('Gemini 안전 정책에 의해 답변 생성이 차단되었습니다.');
   }
@@ -1108,21 +1140,47 @@ async function callGemini(key, model, sys, usr) {
   return resultText;
 }
 
-async function callOpenAICompat(baseUrl, key, model, sys, usr){
-  let messages = [{role:'system',content:sys}];
-  if(Array.isArray(usr)){
+async function callOpenAICompat(baseUrl, key, model, sys, usr) {
+  const cleanKey = key ? key.trim() : '';
+  const cleanModel = model ? model.trim() : 'gpt-4o';
+  // baseUrl 끝의 '/' 제거 처리
+  const cleanBaseUrl = (baseUrl || 'https://api.openai.com/v1').replace(/\/+$/, '');
+
+  let messages = [];
+  if (sys) {
+    messages.push({ role: 'system', content: sys });
+  }
+
+  if (Array.isArray(usr)) {
     messages = messages.concat(usr);
   } else {
-    messages.push({role:'user',content:usr});
+    messages.push({ role: 'user', content: String(usr || '') });
   }
-  const res=await fetch(`${baseUrl}/chat/completions`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
-    body:JSON.stringify({model,max_tokens:2048,messages})
+
+  const res = await fetch(`${cleanBaseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${cleanKey}`
+    },
+    body: JSON.stringify({
+      model: cleanModel,
+      max_tokens: 2048,
+      messages: messages
+    })
   });
-  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||`HTTP ${res.status}`);}
-  const d=await res.json();
-  return d.choices?.[0]?.message?.content||'';
+
+  if (!res.ok) {
+    let errMsg = `HTTP ${res.status}`;
+    try {
+      const e = await res.json();
+      errMsg = e.error?.message || errMsg;
+    } catch (e2) {}
+    throw new Error(`[OpenAI/Grok API 오류] ${errMsg}`);
+  }
+
+  const d = await res.json();
+  return d.choices?.[0]?.message?.content || '';
 }
 
 // ── 결과 저장 ─────────────────────────────────────────
