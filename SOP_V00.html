@@ -6,6 +6,7 @@
 <title>자소서 AI 작성기</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -476,7 +477,8 @@ textarea{resize:vertical}
       <button class="btn btn-ghost btn-sm" onclick="goStep(3)">← 소통으로 돌아가기</button>
       <button class="btn btn-ghost btn-sm" onclick="regenerate()">↺ 재생성</button>
       <button class="btn btn-secondary btn-sm" onclick="copyResult()">📋 복사</button>
-      <button class="btn btn-ghost btn-sm" onclick="downloadResult()">⬇ 저장</button>
+      <button class="btn btn-ghost btn-sm" onclick="downloadResult()">⬇ TXT 저장</button>
+      <button class="btn btn-primary btn-sm" onclick="downloadPDF()" id="pdfBtn">📄 PDF 저장</button>
       <button class="btn btn-ghost btn-sm" onclick="goStep(0)">← 처음으로</button>
     </div>
   </div>
@@ -1203,7 +1205,83 @@ function downloadResult(){
   a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(t);
   a.download=`자기소개서_${univ}_${p.label}.txt`;
   a.click();
-  showToast('⬇ 파일로 저장되었습니다');
+  showToast('⬇ TXT 파일로 저장되었습니다');
+}
+
+// ── PDF 저장 (A4, Noto Sans KR) ───────────────────────
+function textToHtml(text){
+  return text.split('\n').map(line=>{
+    // 섹션 소제목: [제목] 형태
+    if(/^\[.+\]$/.test(line.trim())){
+      return `<div style="font-weight:700;font-size:10.5pt;color:#2F4AC0;margin:14px 0 5px 0;line-height:1.5">${line.trim()}</div>`;
+    }
+    // 구분선 ---
+    if(/^-{3,}$/.test(line.trim())){
+      return `<div style="border-top:1px solid #D8DFF0;margin:18px 0"></div>`;
+    }
+    // 빈줄
+    if(!line.trim()) return `<div style="height:7px"></div>`;
+    // **볼드** 파싱
+    const parsed = line.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    return `<div style="line-height:1.85;margin-bottom:4px">${parsed}</div>`;
+  }).join('');
+}
+
+async function downloadPDF(){
+  const raw = document.getElementById('resultText').textContent;
+  if(!raw){ showToast('자소서가 없습니다. 먼저 생성해 주세요.'); return; }
+
+  const univ = document.getElementById('univInput').value||'대학';
+  const dept = document.getElementById('deptInput').value||'';
+  const btn  = document.getElementById('pdfBtn');
+  btn.disabled=true; btn.textContent='⏳ PDF 생성 중...';
+
+  // A4 출력용 래퍼 div
+  const wrap = document.createElement('div');
+  wrap.style.cssText = [
+    'font-family:"Noto Sans KR",sans-serif',
+    'font-size:10.5pt',
+    'color:#18243A',
+    'line-height:1.85',
+    'word-break:keep-all',
+    'padding:0',
+  ].join(';');
+
+  // 상단 제목
+  const header = document.createElement('div');
+  header.style.cssText = 'text-align:center;margin-bottom:22px;padding-bottom:12px;border-bottom:2px solid #3B5BDB';
+  header.innerHTML = `
+    <div style="font-size:7pt;color:#5A6A8A;letter-spacing:.5px;margin-bottom:5px">자기소개서</div>
+    <div style="font-size:14pt;font-weight:700;color:#18243A">${univ} ${dept}</div>`;
+
+  // 본문
+  const body = document.createElement('div');
+  body.innerHTML = textToHtml(raw);
+
+  // 하단 워터마크
+  const footer = document.createElement('div');
+  footer.style.cssText = 'margin-top:24px;padding-top:10px;border-top:1px solid #D8DFF0;text-align:right;font-size:8pt;color:#8A98B8';
+  footer.textContent = `자소서 AI 작성기 · ${new Date().toLocaleDateString('ko-KR')}`;
+
+  wrap.appendChild(header);
+  wrap.appendChild(body);
+  wrap.appendChild(footer);
+
+  try{
+    await html2pdf().set({
+      margin:       [16, 16, 16, 16],     // mm (상우하좌)
+      filename:     `자기소개서_${univ}.pdf`,
+      image:        {type:'jpeg', quality:0.97},
+      html2canvas:  {scale:2, useCORS:true, letterRendering:true},
+      jsPDF:        {unit:'mm', format:'a4', orientation:'portrait'},
+      pagebreak:    {mode:['avoid-all','css']}
+    }).from(wrap).save();
+    showToast('📄 PDF로 저장되었습니다');
+  }catch(e){
+    showToast('⚠ PDF 생성 오류: '+e.message);
+  }finally{
+    btn.disabled=false; btn.textContent='📄 PDF 저장';
+  }
 }
 
 // ── 유틸 ─────────────────────────────────────────────
