@@ -118,6 +118,17 @@ textarea{resize:vertical}
 .model-select-row select{flex:1}
 /* 토스트 */
 .toast{position:fixed;bottom:24px;right:24px;background:#1A2030;color:#fff;padding:11px 20px;border-radius:10px;font-size:14px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.18);z-index:600;animation:slideUp .25s ease}
+/* 프리셋 드롭다운 */
+.preset-dropdown-wrap{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.preset-dropdown-wrap select{flex:1;padding:9px 12px;font-size:13px;font-family:'Noto Sans KR',sans-serif;border:1.5px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);cursor:pointer}
+.preset-dropdown-wrap select:focus{border-color:var(--accent);outline:none}
+.preset-reset-btn{padding:8px 14px;font-size:12px;font-weight:700;font-family:'Noto Sans KR',sans-serif;border:1.5px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--sub);cursor:pointer;white-space:nowrap;transition:all .15s}
+.preset-reset-btn:hover{border-color:var(--accent);color:var(--accent)}
+.field-edit-hint{font-size:11px;color:var(--muted);margin-top:4px;margin-bottom:-8px}
+/* 무료/유료 배지 */
+.tier-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:12px;vertical-align:middle;margin-left:6px}
+.tier-free{background:#D3F5E8;color:#197A4F}
+.tier-paid{background:#F1F0FE;color:#6741D9}
 /* 파일 목록 */
 .file-list{margin-top:10px;display:flex;flex-direction:column;gap:6px}
 .file-item{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:13px;animation:fadeIn .2s ease}
@@ -212,57 +223,30 @@ textarea{resize:vertical}
 <div class="modal-overlay hidden" id="apiModal">
   <div class="modal-box">
     <div class="modal-title">⚙️ AI 공급자 & API 키 설정</div>
-    <div class="modal-desc">사용할 AI를 선택하고 각 서비스의 API 키를 입력하세요.<br>키는 브라우저 로컬에만 저장되며 외부로 전송되지 않습니다.</div>
-
-    <!-- Claude -->
-    <div class="provider-card" id="pc_claude">
-      <div class="provider-header">
-        <div class="provider-icon" style="background:#F0EFF8">🤖</div>
-        <div>
-          <div class="provider-name">Claude (Anthropic)</div>
-          <div class="provider-note">가장 정교한 한국어 자소서 작성</div>
-        </div>
-        <span class="provider-status st-no" id="ps_claude">미설정</span>
-      </div>
-      <label class="field-label">API 키 &nbsp;<a href="https://console.anthropic.com/account/keys" target="_blank" style="color:var(--accent);font-size:11px">발급 →</a></label>
-      <input type="password" id="key_claude" placeholder="sk-ant-api03-..." oninput="onKeyInput('claude')"/>
-      <div class="model-select-row">
-        <label class="field-label" style="margin:0;white-space:nowrap">모델</label>
-        <select id="model_claude_preset" onchange="applyPreset('claude')" style="flex:0 0 auto;width:auto;max-width:200px">
-          <option value="claude-sonnet-4-6">Sonnet 4.6 (추천)</option>
-          <option value="claude-opus-5">Opus 5</option>
-          <option value="claude-sonnet-5">Sonnet 5</option>
-          <option value="claude-haiku-4-5-20251001">Haiku 4.5</option>
-          <option value="__custom__">직접 입력...</option>
-        </select>
-        <div class="model-input-wrap">
-          <input type="text" id="model_claude" placeholder="모델명 직접 입력" oninput="onModelInput('claude')"/>
-          <button class="clear-btn" onclick="clearModel('claude')">✕</button>
-        </div>
-      </div>
-      <p class="model-hint">최신 모델명: <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" style="color:var(--accent)">Anthropic 문서 →</a></p>
+    <div class="modal-desc">사용할 AI를 선택하고 API 키를 입력하세요. 키는 브라우저 로컬에만 저장되며 외부로 전송되지 않습니다.<br>
+      <span class="tier-badge tier-free">🟢 무료한도</span> Google AI Studio 계정으로 매일 무료 사용 가능 &nbsp;|&nbsp;
+      <span class="tier-badge tier-paid">💰 유료</span> API 크레딧 충전 필요
     </div>
 
-    <!-- Gemini -->
+    <!-- Gemini → 첫 번째로 (무료 추천) -->
     <div class="provider-card" id="pc_gemini">
       <div class="provider-header">
         <div class="provider-icon" style="background:#E8F5E9">✨</div>
         <div>
-          <div class="provider-name">Gemini (Google)</div>
-          <div class="provider-note">Google AI Studio 무료 API 지원</div>
+          <div class="provider-name">Gemini (Google) <span class="tier-badge tier-free">🟢 무료한도</span></div>
+          <div class="provider-note">Google AI Studio — Flash 모델은 무료 API 제공 (일 1,500회·분 15회 제한)</div>
         </div>
         <span class="provider-status st-no" id="ps_gemini">미설정</span>
       </div>
-      <label class="field-label">API 키 &nbsp;<a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent);font-size:11px">발급 →</a></label>
+      <label class="field-label">API 키 &nbsp;<a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent);font-size:11px">무료 발급 →</a></label>
       <input type="password" id="key_gemini" placeholder="AIza..." oninput="onKeyInput('gemini')"/>
       <div class="model-select-row">
         <label class="field-label" style="margin:0;white-space:nowrap">모델</label>
-        <!-- HTML 모달 내 Gemini 드롭다운 부분 -->
-        <select id="model_gemini_preset" onchange="applyPreset('gemini')" style="flex:0 0 auto;width:auto;max-width:200px">
-          <option value="gemini-3.6-flash">3.6 Flash (최신·추천)</option>
-          <option value="gemini-2.5-flash">2.5 Flash</option>
-          <option value="gemini-2.5-pro">2.5 Pro</option>
-          <option value="gemini-2.0-flash">2.0 Flash</option>
+        <select id="model_gemini_preset" onchange="applyPreset('gemini')" style="flex:0 0 auto;width:auto;max-width:240px">
+          <option value="gemini-3.6-flash">🟢 3.6 Flash — 최신·무료한도 (추천)</option>
+          <option value="gemini-2.5-flash">🟢 2.5 Flash — 무료한도</option>
+          <option value="gemini-2.0-flash">🟢 2.0 Flash — 무료한도</option>
+          <option value="gemini-2.5-pro">💰 2.5 Pro — 유료</option>
           <option value="__custom__">직접 입력...</option>
         </select>
         <div class="model-input-wrap">
@@ -273,13 +257,42 @@ textarea{resize:vertical}
       <p class="model-hint">최신 모델명: <a href="https://ai.google.dev/gemini-api/docs/models" target="_blank" style="color:var(--accent)">Google AI 문서 →</a></p>
     </div>
 
+    <!-- Claude -->
+    <div class="provider-card" id="pc_claude">
+      <div class="provider-header">
+        <div class="provider-icon" style="background:#F0EFF8">🤖</div>
+        <div>
+          <div class="provider-name">Claude (Anthropic) <span class="tier-badge tier-paid">💰 유료</span></div>
+          <div class="provider-note">가장 정교한 한국어 자소서 작성 — API 크레딧 필요</div>
+        </div>
+        <span class="provider-status st-no" id="ps_claude">미설정</span>
+      </div>
+      <label class="field-label">API 키 &nbsp;<a href="https://console.anthropic.com/account/keys" target="_blank" style="color:var(--accent);font-size:11px">발급 →</a></label>
+      <input type="password" id="key_claude" placeholder="sk-ant-api03-..." oninput="onKeyInput('claude')"/>
+      <div class="model-select-row">
+        <label class="field-label" style="margin:0;white-space:nowrap">모델</label>
+        <select id="model_claude_preset" onchange="applyPreset('claude')" style="flex:0 0 auto;width:auto;max-width:240px">
+          <option value="claude-sonnet-4-6">💰 Sonnet 4.6 — 추천 (품질·비용 균형)</option>
+          <option value="claude-haiku-4-5-20251001">💰 Haiku 4.5 — 빠르고 저렴</option>
+          <option value="claude-sonnet-5">💰 Sonnet 5 — 고품질</option>
+          <option value="claude-opus-5">💰 Opus 5 — 최고품질·고비용</option>
+          <option value="__custom__">직접 입력...</option>
+        </select>
+        <div class="model-input-wrap">
+          <input type="text" id="model_claude" placeholder="모델명 직접 입력" oninput="onModelInput('claude')"/>
+          <button class="clear-btn" onclick="clearModel('claude')">✕</button>
+        </div>
+      </div>
+      <p class="model-hint">최신 모델명: <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" style="color:var(--accent)">Anthropic 문서 →</a></p>
+    </div>
+
     <!-- Grok -->
     <div class="provider-card" id="pc_grok">
       <div class="provider-header">
         <div class="provider-icon" style="background:#E8F4FD">⚡</div>
         <div>
-          <div class="provider-name">Grok (xAI)</div>
-          <div class="provider-note">xAI API — OpenAI 호환 엔드포인트</div>
+          <div class="provider-name">Grok (xAI) <span class="tier-badge tier-paid">💰 유료</span></div>
+          <div class="provider-note">xAI API — OpenAI 호환 · API 크레딧 필요</div>
         </div>
         <span class="provider-status st-no" id="ps_grok">미설정</span>
       </div>
@@ -287,10 +300,10 @@ textarea{resize:vertical}
       <input type="password" id="key_grok" placeholder="xai-..." oninput="onKeyInput('grok')"/>
       <div class="model-select-row">
         <label class="field-label" style="margin:0;white-space:nowrap">모델</label>
-        <select id="model_grok_preset" onchange="applyPreset('grok')" style="flex:0 0 auto;width:auto;max-width:200px">
-          <option value="grok-4">Grok 4 (추천)</option>
-          <option value="grok-3">Grok 3</option>
-          <option value="grok-3-mini">Grok 3 Mini</option>
+        <select id="model_grok_preset" onchange="applyPreset('grok')" style="flex:0 0 auto;width:auto;max-width:240px">
+          <option value="grok-4">💰 Grok 4 — 추천</option>
+          <option value="grok-3">💰 Grok 3</option>
+          <option value="grok-3-mini">💰 Grok 3 Mini — 저렴</option>
           <option value="__custom__">직접 입력...</option>
         </select>
         <div class="model-input-wrap">
@@ -306,8 +319,8 @@ textarea{resize:vertical}
       <div class="provider-header">
         <div class="provider-icon" style="background:#E8F5E9">💬</div>
         <div>
-          <div class="provider-name">ChatGPT (OpenAI)</div>
-          <div class="provider-note">GPT-4o · OpenAI 공식 API</div>
+          <div class="provider-name">ChatGPT (OpenAI) <span class="tier-badge tier-paid">💰 유료</span></div>
+          <div class="provider-note">GPT-4o · OpenAI 공식 API · API 크레딧 필요</div>
         </div>
         <span class="provider-status st-no" id="ps_openai">미설정</span>
       </div>
@@ -315,11 +328,11 @@ textarea{resize:vertical}
       <input type="password" id="key_openai" placeholder="sk-proj-..." oninput="onKeyInput('openai')"/>
       <div class="model-select-row">
         <label class="field-label" style="margin:0;white-space:nowrap">모델</label>
-        <select id="model_openai_preset" onchange="applyPreset('openai')" style="flex:0 0 auto;width:auto;max-width:200px">
-          <option value="gpt-4o">GPT-4o (추천)</option>
-          <option value="o3">o3</option>
-          <option value="o4-mini">o4-mini</option>
-          <option value="gpt-4o-mini">GPT-4o Mini</option>
+        <select id="model_openai_preset" onchange="applyPreset('openai')" style="flex:0 0 auto;width:auto;max-width:240px">
+          <option value="gpt-4o">💰 GPT-4o — 추천 (품질·비용 균형)</option>
+          <option value="gpt-4o-mini">💰 GPT-4o Mini — 저렴</option>
+          <option value="o4-mini">💰 o4-mini — 추론 특화</option>
+          <option value="o3">💰 o3 — 고품질·고비용</option>
           <option value="__custom__">직접 입력...</option>
         </select>
         <div class="model-input-wrap">
@@ -350,29 +363,66 @@ textarea{resize:vertical}
 <div id="step0" class="animate">
   <div class="card">
     <div class="card-title"><span class="num">1</span>지원 대학 · 학과 · 인재상</div>
-    <div class="card-desc">프리셋을 선택하거나 직접 입력하세요. 선택 시 문항·인재상이 자동으로 입력됩니다.</div>
-    <div class="preset-group-label">── 지원 대학 프리셋 (이미지 기준) ──</div>
-    <div class="chips" id="chips1"></div>
-    <div class="preset-group-label">── 수도권 주요 4년제 ──</div>
-    <div class="chips" id="chips2"></div>
+    <div class="card-desc">대학을 선택하면 문항·인재상이 자동 입력됩니다. 모집요강이 바뀌면 아래에서 직접 수정하세요.</div>
+
+    <!-- 프리셋 드롭다운 -->
+    <div class="field">
+      <label class="field-label">대학 프리셋 선택 <span style="font-size:11px;color:var(--muted);font-weight:400">(선택 후 하단에서 수정 가능)</span></label>
+      <div class="preset-dropdown-wrap">
+        <select id="presetSelect" onchange="onPresetSelect(this.value)">
+          <option value="">-- 대학을 선택하세요 --</option>
+          <optgroup label="── 이공계 특성화 대학 ──">
+            <option value="UNIST (이공계열)">UNIST — 이공계열(바이오메디컬공학과) · 일반전형 서류100%</option>
+            <option value="DGIST (기초학부)">DGIST — 기초학부 · 일반전형 서류100%+면접</option>
+            <option value="KENTECH (에너지공학부)">KENTECH — 에너지공학부 · 1단계서류+2단계면접</option>
+          </optgroup>
+          <optgroup label="── 수도권 주요 대학 · 특별전형 ──">
+            <option value="연세대 융합과학공학부">연세대 — 융합과학공학부 · 국제형(국내고) · 1단계서류+2단계면접</option>
+            <option value="성균관대 자연과학계열">성균관대 — 자연과학계열 · 융합인재 · 서류100%</option>
+            <option value="중앙대 융합공학부">중앙대 — 융합공학부 · 성장형인재 · 1단계서류+2단계면접</option>
+            <option value="경희대 약학과">경희대 — 약학과 · 네오르네상스 · 1단계서류+2단계면접</option>
+            <option value="건국대 공대자유전공">건국대 — 공과대학자유전공 · KU지역균형 · 교과70%+서류30%</option>
+            <option value="동국대 열린전공">동국대 — 열린전공(자연) · 학교장추천 · 교과70%+서류30%</option>
+            <option value="인하대 항공우주공학과">인하대 — 항공우주공학과 · 지역균형 · 교과100%</option>
+          </optgroup>
+          <optgroup label="── 수도권 상위 4년제 ──">
+            <option value="서울대">서울대 — 자연과학대 / 공과대</option>
+            <option value="고려대">고려대 — 이과대 / 공과대</option>
+            <option value="서강대">서강대 — 자연과학부 / 공학부</option>
+            <option value="한양대">한양대 — 자연·공학 계열</option>
+            <option value="이화여대">이화여대 — 자연과학대 / 엘텍공과대</option>
+            <option value="경희대 이공계">경희대 — 이과대학 / 공과대학</option>
+            <option value="아주대">아주대 — 자연과학대 / 공과대</option>
+            <option value="숙명·세종·광운대">숙명여대 / 세종대 / 광운대 — 이공계 학부</option>
+          </optgroup>
+        </select>
+        <button class="preset-reset-btn" onclick="resetPreset()" title="입력 내용 초기화">↺ 초기화</button>
+      </div>
+    </div>
+
     <div class="divider"></div>
+
     <div class="grid2">
       <div class="field">
         <label class="field-label">지원 대학 <span style="color:var(--err)">*</span></label>
         <input type="text" id="univInput" placeholder="예: UNIST"/>
+        <p class="field-edit-hint">✏️ 직접 수정 가능</p>
       </div>
       <div class="field">
         <label class="field-label">지원 학과</label>
         <input type="text" id="deptInput" placeholder="예: 바이오메디컬공학과"/>
+        <p class="field-edit-hint">✏️ 직접 수정 가능</p>
       </div>
     </div>
     <div class="field">
       <label class="field-label">자소서 문항 <span style="color:var(--err)">*</span></label>
-      <textarea id="questionInput" rows="4" placeholder="자소서 문항을 입력하세요 (복수 문항 가능)"></textarea>
+      <textarea id="questionInput" rows="5" placeholder="자소서 문항을 입력하세요 (복수 문항 가능)"></textarea>
+      <p class="field-edit-hint">✏️ 프리셋 내용은 직접 수정할 수 있습니다 — 모집요강이 바뀌면 이 곳에서 고치세요</p>
     </div>
     <div class="field">
       <label class="field-label">인재상 내용 <span style="color:var(--err)">*</span></label>
       <textarea id="talentInput" rows="7" placeholder="인재상을 입력하거나 위 프리셋을 선택하세요"></textarea>
+      <p class="field-edit-hint">✏️ 직접 수정 가능 — 전형 변경 사항을 반영하세요</p>
     </div>
     <div id="err0" class="alert alert-err hidden"></div>
     <div class="btn-row">
@@ -590,7 +640,7 @@ const G2=["서울대","고려대","서강대","한양대","이화여대","경희
 
 // ── 상태 ────────────────────────────────────────────
 let currentStep = 0;
-let activeProvider = localStorage.getItem('_active_provider') || 'claude';
+let activeProvider = localStorage.getItem('_active_provider') || 'gemini'; // 기본: Gemini (무료)
 let fileData = {sTxt:'', cTxt:''};
 
 // localStorage에서 키/모델 불러오기
@@ -626,43 +676,53 @@ function loadKeys(){
 
 // ── 초기화 ──────────────────────────────────────────
 window.onload = function(){
-  renderChips('chips1',G1);
-  renderChips('chips2',G2);
   renderStepBar();
   renderProviderTabs();
   syncModalInputs();
   updateHeaderBadge();
-  document.getElementById('questionInput').value="1. 지원한 동기와 고등학교 재학기간 동안 들였던 노력, 기타 특별한 경험 등에 대해서 활동 중심으로 상세히 기술하여 주시기 바랍니다. (1000자 이내)\n\n2. 입학 후 학업계획과 학부과정 졸업 후 진로계획에 대해 기술하여 주시기 바랍니다. (1000자 이내)";
 };
 
-function renderChips(id, keys){
-  document.getElementById(id).innerHTML = keys.map(k=>
-    `<button class="chip" id="chip_${esc(k)}" onclick="selectPreset('${k}')">${k}</button>`
-  ).join('');
-}
 function esc(s){return s.replace(/[^a-zA-Z0-9가-힣]/g,'_')}
 
-function selectPreset(key){
-  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-  const el=document.getElementById('chip_'+esc(key));
-  if(el) el.classList.add('active');
+// 드롭다운 선택 이벤트
+function onPresetSelect(key){
+  if(!key) return;
   const p=PRESETS[key];
   if(p){
     document.getElementById('univInput').value=p.univ;
     document.getElementById('deptInput').value=p.dept;
     document.getElementById('questionInput').value=p.question;
     document.getElementById('talentInput').value=p.talent;
+    showToast(`✓ ${key} 프리셋 적용됨 — 아래에서 직접 수정 가능합니다`);
   }
 }
 
+// 초기화 버튼
+function resetPreset(){
+  document.getElementById('presetSelect').value='';
+  document.getElementById('univInput').value='';
+  document.getElementById('deptInput').value='';
+  document.getElementById('questionInput').value='';
+  document.getElementById('talentInput').value='';
+  showToast('↺ 입력 내용이 초기화되었습니다');
+}
+
 // ── 공급자 탭 ────────────────────────────────────────
+const FREE_PROVIDERS = new Set(['gemini']); // 무료한도 있는 공급자
+const FREE_MODELS    = new Set(['gemini-3.6-flash','gemini-2.5-flash','gemini-2.0-flash']);
+
+function isFreeModel(providerId, model){
+  return FREE_PROVIDERS.has(providerId) && FREE_MODELS.has(model||'');
+}
+
 function renderProviderTabs(){
   const cfg = loadKeys();
   const tabs = document.getElementById('providerTabs');
   tabs.innerHTML = Object.entries(PROVIDERS).map(([id,p])=>{
-    const hasKey = !!cfg[id].key;
+    const hasKey  = !!cfg[id].key;
     const isActive = id===activeProvider;
-    return `<button class="ptab${isActive?' active':''}${hasKey?' ok':''}" id="ptab_${id}" onclick="switchProvider('${id}')">${p.icon} ${p.label}</button>`;
+    const freeTag = FREE_PROVIDERS.has(id) ? ' 🟢' : '';
+    return `<button class="ptab${isActive?' active':''}${hasKey?' ok':''}" id="ptab_${id}" onclick="switchProvider('${id}')">${p.icon} ${p.label}${freeTag}</button>`;
   }).join('');
 }
 
@@ -677,10 +737,12 @@ function updateHeaderBadge(){
   const cfg = loadKeys();
   const p = PROVIDERS[activeProvider];
   const hasKey = !!cfg[activeProvider].key;
-  const model = cfg[activeProvider].model;
+  const model  = cfg[activeProvider].model;
+  const free   = isFreeModel(activeProvider, model);
   document.getElementById('mdot').className = 'mdot' + (hasKey?' ok':'');
-  document.getElementById('modelBadgeText').textContent =
-    hasKey ? `${p.icon} ${p.label} · ${model}` : `${p.icon} ${p.label} — 키 미설정`;
+  document.getElementById('modelBadgeText').textContent = hasKey
+    ? `${p.icon} ${p.label} · ${model}${free?' 🟢':' 💰'}`
+    : `${p.icon} ${p.label} — 키 미설정`;
 }
 
 // ── API 설정 모달 ────────────────────────────────────
