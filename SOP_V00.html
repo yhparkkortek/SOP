@@ -244,9 +244,10 @@ textarea{resize:vertical}
         <label class="field-label" style="margin:0;white-space:nowrap">모델</label>
         <!-- HTML 모달 내 Gemini 드롭다운 부분 -->
         <select id="model_gemini_preset" onchange="applyPreset('gemini')" style="flex:0 0 auto;width:auto;max-width:200px">
-          <option value="gemini-2.5-flash">2.5 Flash (추천·무료)</option>
+          <option value="gemini-3.6-flash">3.6 Flash (최신·추천)</option>
+          <option value="gemini-2.5-flash">2.5 Flash</option>
           <option value="gemini-2.5-pro">2.5 Pro</option>
-          <option value="gemini-1.5-flash">1.5 Flash</option>
+          <option value="gemini-2.0-flash">2.0 Flash</option>
           <option value="__custom__">직접 입력...</option>
         </select>
         <div class="model-input-wrap">
@@ -565,14 +566,13 @@ let fileData = {sTxt:'', cTxt:''};
 // localStorage에서 키/모델 불러오기
 const DEFAULT_MODELS = {
   claude: 'claude-sonnet-4-6',
-  gemini: 'gemini-2.5-flash', // 수정: 올바른 공식 모델명으로 지정
+  gemini: 'gemini-3.6-flash',
   grok:   'grok-4',
   openai: 'gpt-4o',
 };
-// PROVIDERS 객체 내 defaultModel 변경
 const PROVIDERS = {
   claude:  {label:'Claude',   icon:'🤖', color:'#7C3AED', defaultModel:'claude-sonnet-4-6'},
-  gemini:  {label:'Gemini',   icon:'✨', color:'#1A73E8', defaultModel:'gemini-2.5-flash'}, // 수정
+  gemini:  {label:'Gemini',   icon:'✨', color:'#1A73E8', defaultModel:'gemini-3.6-flash'},
   grok:    {label:'Grok',     icon:'⚡', color:'#1DA1F2', defaultModel:'grok-4'},
   openai:  {label:'ChatGPT',  icon:'💬', color:'#10A37F', defaultModel:'gpt-4o'},
 };
@@ -584,6 +584,15 @@ function loadKeys(){
     openai:  {key: localStorage.getItem('_key_openai')||'',  model: localStorage.getItem('_model_openai')||DEFAULT_MODELS.openai},
   };
 }
+
+// ── Gemini 모델 마이그레이션 (구형 모델 자동 교체) ──────────────
+(function migrateGeminiModel(){
+  const OLD = ['gemini-2.5-flash','gemini-1.5-flash','gemini-1.5-pro'];
+  const cur = localStorage.getItem('_model_gemini');
+  if(cur && OLD.includes(cur)){
+    localStorage.setItem('_model_gemini','gemini-3.6-flash');
+  }
+})();
 
 // ── 초기화 ──────────────────────────────────────────
 window.onload = function(){
@@ -687,7 +696,7 @@ function onModelInput(id){
 }
 // ✕ 버튼 → 기본값으로 초기화
 function clearModel(id){
-  const defaults = {claude:'claude-sonnet-4-6',gemini:'gemini-2.5-flash',grok:'grok-4',openai:'gpt-4o'}; // gemini-2.5-flash로 통일
+  const defaults = {claude:'claude-sonnet-4-6',gemini:'gemini-3.6-flash',grok:'grok-4',openai:'gpt-4o'};
   const mi = document.getElementById('model_'+id);
   const ps = document.getElementById('model_'+id+'_preset');
   if(mi) mi.value = defaults[id]||'';
@@ -1079,7 +1088,7 @@ async function callClaude(key, model, sys, usr) {
 // ── Gemini API (Multi-turn 지원 수정) ───────────────────
 async function callGemini(key, model, sys, usr) {
   const cleanKey = key ? key.trim() : '';
-  const cleanModel = model ? model.trim() : 'gemini-2.5-flash';
+  const cleanModel = model ? model.trim() : 'gemini-3.6-flash';
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${cleanKey}`;
 
